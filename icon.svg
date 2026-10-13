@@ -1,0 +1,71 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#172842"/>
+      <stop offset="100%" stop-color="#080d1a"/>
+    </linearGradient>
+
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9affdf"/>
+      <stop offset="100%" stop-color="#42dcae"/>
+    </linearGradient>
+
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Midnight background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Subtle inner border -->
+  <rect x="12" y="12" width="488" height="488" rx="102"
+        fill="none" stroke="#79c9ff" stroke-opacity=".12" stroke-width="2"/>
+
+  <!-- Background orbit -->
+  <circle cx="256" cy="256" r="153"
+          fill="none" stroke="#79c9ff"
+          stroke-opacity=".13" stroke-width="2"/>
+
+  <!-- Small stars -->
+  <g fill="#79c9ff">
+    <circle cx="143" cy="151" r="4"/>
+    <circle cx="365" cy="157" r="3"/>
+    <circle cx="380" cy="318" r="4"/>
+    <circle cx="130" cy="328" r="3"/>
+  </g>
+
+  <!-- Moon -->
+  <path d="M305 102
+           A112 112 0 1 0 410 263
+           A91 91 0 0 1 305 102Z"
+        fill="url(#mint)" filter="url(#glow)"/>
+
+  <!-- Rising progress arrow -->
+  <path d="M119 344
+           L207 256
+           L258 294
+           L360 185"
+        fill="none" stroke="#79c9ff"
+        stroke-width="19" stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <path d="M315 185 H360 V230"
+        fill="none" stroke="#79c9ff"
+        stroke-width="19" stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Foreground checkmark -->
+  <path d="M163 365 L218 420 L344 294"
+        fill="none" stroke="url(#mint)"
+        stroke-width="25" stroke-linecap="round"
+        stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Tiny ice-blue accent -->
+  <circle cx="390" cy="117" r="7" fill="#79c9ff"/>
+</svg>

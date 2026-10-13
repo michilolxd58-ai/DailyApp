@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d1a">
+  <meta name="description" content="Your personal daily discipline tracker.">
+
+  <title>DailyApp — Midnight Edition</title>
+
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon.png">
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>DailyApp<span>.</span></h1>
+        <p id="today-date">Your day starts now.</p>
+      </div>
+      <div class="level-badge">
+        <span>LEVEL</span>
+        <strong id="header-level">1</strong>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" id="view-home">
+        <div class="hero card">
+          <div class="eyebrow">YOUR DAILY RESET</div>
+          <h2 id="greeting">Make today count.</h2>
+          <p>Small actions. Consistent progress.</p>
+
+          <div class="hero-stats">
+            <div>
+              <strong id="home-completed">0/0</strong>
+              <span>Tasks done</span>
+            </div>
+            <div>
+              <strong id="home-xp">0 XP</strong>
+              <span>Total earned</span>
+            </div>
+          </div>
+
+          <div class="progress-info">
+            <span>Daily progress</span>
+            <strong id="home-percent">0%</strong>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" id="home-bar"></div>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h3>Today's focus</h3>
+          <button class="text-button" data-go="tasks">View all →</button>
+        </div>
+
+        <div id="home-tasks" class="task-list"></div>
+
+        <button class="primary-button full-button" data-go="tasks">
+          + Add a task
+        </button>
+
+        <div class="quote-card">
+          <span class="quote-mark">“</span>
+          <p>Discipline is built one day at a time.</p>
+        </div>
+      </section>
+
+      <section class="view" id="view-tasks">
+        <div class="page-heading">
+          <div class="eyebrow">STAY CONSISTENT</div>
+          <h2>Your tasks</h2>
+          <p>Choose your priorities. Finish what you start.</p>
+        </div>
+
+        <form id="task-form" class="add-task card">
+          <input id="task-input" type="text" maxlength="100"
+            placeholder="What do you want to do?" required>
+          <button type="submit" aria-label="Add task">+</button>
+        </form>
+
+        <div class="filter-row">
+          <button class="filter active" data-filter="all">All</button>
+          <button class="filter" data-filter="open">Active</button>
+          <button class="filter" data-filter="done">Completed</button>
+        </div>
+
+        <div id="task-list" class="task-list"></div>
+      </section>
+
+      <section class="view" id="view-calendar">
+        <div class="page-heading">
+          <div class="eyebrow">PLAN YOUR DAYS</div>
+          <h2>Calendar</h2>
+          <p>See your month at a glance.</p>
+        </div>
+
+        <div class="card calendar-card">
+          <div class="calendar-header">
+            <button id="prev-month" class="icon-button" aria-label="Previous month">‹</button>
+            <h3 id="calendar-month"></h3>
+            <button id="next-month" class="icon-button" aria-label="Next month">›</button>
+          </div>
+          <div class="calendar-grid calendar-weekdays">
+            <span>Mo</span><span>Tu</span><span>We</span>
+            <span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+          </div>
+          <div id="calendar-days" class="calendar-grid"></div>
+          <p class="calendar-hint">Dots indicate days with tasks.</p>
+        </div>
+
+        <div class="section-heading">
+          <h3 id="selected-date-heading">Selected day</h3>
+        </div>
+        <div id="calendar-tasks" class="task-list"></div>
+      </section>
+
+      <section class="view" id="view-progress">
+        <div class="page-heading">
+          <div class="eyebrow">KEEP MOVING FORWARD</div>
+          <h2>Your progress</h2>
+          <p>Every completed task counts.</p>
+        </div>
+
+        <div class="card level-card">
+          <div class="level-circle">
+            <span>LEVEL</span>
+            <strong id="progress-level">1</strong>
+          </div>
+          <div class="level-details">
+            <h3 id="level-title">Getting started</h3>
+            <p id="level-description">Every journey begins with one step.</p>
+            <div class="progress-track">
+              <div class="progress-bar" id="level-bar"></div>
+            </div>
+            <small id="level-xp">0 / 100 XP</small>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h3>Your stats</h3>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card card">
+            <span>Tasks completed</span>
+            <strong id="stat-completed">0</strong>
+          </div>
+          <div class="stat-card card">
+            <span>Total tasks</span>
+            <strong id="stat-total">0</strong>
+          </div>
+          <div class="stat-card card">
+            <span>Completion rate</span>
+            <strong id="stat-rate">0%</strong>
+          </div>
+          <div class="stat-card card">
+            <span>Total XP</span>
+            <strong id="stat-xp">0</strong>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h3>Recent activity</h3>
+        </div>
+        <div id="activity-list" class="task-list"></div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="page-heading">
+          <div class="eyebrow">MAKE IT YOURS</div>
+          <h2>Settings</h2>
+          <p>Your app, your routine.</p>
+        </div>
+
+        <div class="card settings-card">
+          <h3>DailyApp</h3>
+          <p>Midnight Edition · Version 1.0</p>
+          <div class="settings-line">
+            <span>Theme</span>
+            <span class="mint-text">Midnight</span>
+          </div>
+          <div class="settings-line">
+            <span>Storage</span>
+            <span class="mint-text">On this device</span>
+          </div>
+          <div class="settings-line">
+            <span>Offline support</span>
+            <span id="offline-status">Checking...</span>
+          </div>
+        </div>
+
+        <div class="card settings-card">
+          <h3>Data management</h3>
+          <p>Your tasks are stored locally in this browser.</p>
+          <button id="export-data" class="secondary-button full-button">
+            Export my data
+          </button>
+          <button id="reset-data" class="danger-button full-button">
+            Reset all data
+          </button>
+        </div>
+
+        <p class="footer-note">Built for consistency, not perfection.</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-view="home">
+        <span class="nav-icon">⌂</span><span>Home</span>
+      </button>
+      <button class="nav-item" data-view="tasks">
+        <span class="nav-icon">☷</span><span>Tasks</span>
+      </button>
+      <button class="nav-item" data-view="calendar">
+        <span class="nav-icon">▦</span><span>Calendar</span>
+      </button>
+      <button class="nav-item" data-view="progress">
+        <span class="nav-icon">↗</span><span>Progress</span>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <span class="nav-icon">⚙</span><span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
