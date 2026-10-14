@@ -1,148 +1,446 @@
+```html
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#050605" id="theme-color">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="DailyApp — your personal daily discipline tracker.">
-<title>DailyApp — Version 2</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d1a" id="theme-color">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DailyApp">
+  <meta name="description" content="Dein persönlicher Tagesplaner für Fokus und Fortschritt.">
+  <title>DailyApp — Midnight Edition 2.2</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="app">
-<header class="topbar">
-  <div><h1>DailyApp<span>.</span></h1><p id="today-date">Your day starts now.</p></div>
-  <div class="level-badge"><span>LEVEL</span><strong id="header-level">1</strong></div>
-</header>
+  <div class="app-shell">
 
-<main>
-<section class="view active" id="view-home">
-<div class="hero card">
-<div class="eyebrow">YOUR DAILY RESET</div>
-<h2 id="greeting">Make today count.</h2><p>Small actions. Consistent progress.</p>
-<div class="hero-stats"><div><strong id="home-completed">0/0</strong><span>Tasks done</span></div><div><strong id="home-xp">0 XP</strong><span>Total earned</span></div></div>
-<div class="progress-info"><span>Daily progress</span><strong id="home-percent">0%</strong></div>
-<div class="progress-track"><div class="progress-bar" id="home-bar"></div></div>
-</div>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="today-label">DEIN TAG</p>
+        <h1>Daily<span>App</span></h1>
+      </div>
+      <button class="icon-button" id="quick-add" aria-label="Aufgabe hinzufügen">＋</button>
+    </header>
 
-<div class="section-heading"><h3>Today's focus</h3><button class="text-button" data-go="tasks">View all →</button></div>
-<div id="home-tasks" class="task-list"></div>
-<button class="primary-button full-button" data-go="tasks">+ Add a task</button>
+    <main>
 
-<div class="section-heading"><h3>Daily challenge</h3><span class="badge-count" id="daily-goal-label">0 XP / 0 XP</span></div>
-<div class="card"><div id="daily-challenge-text">Complete today's tasks to reach your goal.</div><div class="progress-track" style="margin-top:12px"><div class="progress-bar" id="daily-goal-bar"></div></div></div>
+      <!-- HOME -->
+      <section class="view active" id="view-home">
+        <article class="hero-card">
+          <div class="hero-top">
+            <span class="pill">DAILY OVERVIEW</span>
+            <span id="home-date"></span>
+          </div>
+          <h2>Ein Schritt nach dem anderen.</h2>
+          <p>Bleib konstant. Kleine Aufgaben zählen.</p>
+          <div class="progress-track">
+            <div class="progress-fill" id="daily-progress-fill"></div>
+          </div>
+          <div class="progress-meta">
+            <strong id="daily-progress-text">0 von 0 erledigt</strong>
+            <span id="daily-progress-percent">0%</span>
+          </div>
+        </article>
 
-<div class="section-heading"><h3>Streaks</h3><span class="badge-count">🔥 Consistency</span></div>
-<div class="card"><div class="report-grid"><div class="report-metric"><strong id="current-streak">0</strong><span>Current days</span></div><div class="report-metric"><strong id="best-streak">0</strong><span>Best streak</span></div><div class="report-metric"><strong id="weekly-complete">0</strong><span>This week</span></div></div></div>
+        <div class="stat-grid">
+          <article class="stat-card">
+            <span class="stat-icon">⚡</span>
+            <span class="stat-label">Gesamt-XP</span>
+            <strong id="home-xp">0</strong>
+            <small id="home-level">Level 1</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon">🔥</span>
+            <span class="stat-label">Aktuelle Serie</span>
+            <strong id="home-streak">0 Tage</strong>
+            <small>aktive Tage</small>
+          </article>
+        </div>
 
-<div class="section-heading"><h3>Weekly report</h3><button class="text-button" data-go="progress">Full progress →</button></div>
-<div class="card" id="home-weekly-report"></div>
-<div class="quote-card"><span class="quote-mark">“</span><p>Discipline is built one day at a time.</p></div>
-</section>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">JETZT ANPACKEN</p>
+            <h2>Heutige Aufgaben</h2>
+          </div>
+          <button class="text-button" data-go="tasks">Alle ansehen ↗</button>
+        </div>
+        <div id="home-tasks" class="task-list"></div>
 
-<section class="view" id="view-tasks">
-<div class="page-heading"><div class="eyebrow">STAY CONSISTENT</div><h2>Your tasks</h2><p>Choose your priorities. Finish what you start.</p></div>
-<form id="task-form" class="add-task card"><input id="task-input" type="text" maxlength="100" placeholder="What do you want to do?" required><select id="task-category" aria-label="Task category"></select><button type="submit" aria-label="Add task">+</button></form>
-<div class="filter-row"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="open">Active</button><button class="filter" data-filter="done">Completed</button></div>
-<div id="task-list" class="task-list"></div>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">KLEINER CHECK-IN</p>
+            <h2>Tagesfokus</h2>
+          </div>
+        </div>
+        <article class="panel focus-note">
+          <p id="daily-quote">Konstanz schlägt Motivation.</p>
+          <button class="secondary-button" data-go="progress">Fortschritt ansehen</button>
+        </article>
+      </section>
 
-<div class="section-heading"><h3>Random bonus quest</h3><span class="badge-count">Bonus XP</span></div>
-<div class="card"><p class="muted-copy">Need an extra challenge? Generate a small bonus mission.</p>
-<div id="bonus-quest" class="quest-row"><span class="quest-icon">🎯</span><div class="quest-info"><strong>No bonus quest yet</strong><small>Generate one when you're ready.</small></div></div>
-<button id="new-quest" class="secondary-button full-button">Generate bonus quest</button>
-<button id="complete-quest" class="primary-button full-button" disabled>Complete quest (+25 XP)</button></div>
-</section>
+      <!-- TASKS -->
+      <section class="view" id="view-tasks">
+        <div class="page-heading">
+          <p class="eyebrow">PLANEN & ERLEDIGEN</p>
+          <h2>Tasks</h2>
+          <p>Mach aus Vorhaben konkrete nächste Schritte.</p>
+        </div>
 
-<section class="view" id="view-calendar">
-<div class="page-heading"><div class="eyebrow">PLAN YOUR DAYS</div><h2>Calendar</h2><p>See your month at a glance.</p></div>
-<div class="card calendar-card"><div class="calendar-header"><button id="prev-month" class="icon-button" aria-label="Previous month">‹</button><h3 id="calendar-month"></h3><button id="next-month" class="icon-button" aria-label="Next month">›</button></div>
-<div class="calendar-grid calendar-weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-<div id="calendar-days" class="calendar-grid"></div><p class="calendar-hint">Dots indicate days with tasks.</p></div>
-<div class="section-heading"><h3 id="selected-date-heading">Selected day</h3></div><div id="calendar-tasks" class="task-list"></div>
-</section>
+        <form id="task-form" class="panel task-form">
+          <label for="task-input">Neue Aufgabe</label>
+          <input id="task-input" maxlength="120"
+                 placeholder="z. B. 20 Minuten lernen" required>
 
-<section class="view" id="view-progress">
-<div class="page-heading"><div class="eyebrow">KEEP MOVING FORWARD</div><h2>Your progress</h2><p>Every completed task counts.</p></div>
-<div class="card level-card"><div class="level-circle"><span>LEVEL</span><strong id="progress-level">1</strong></div><div class="level-details"><h3 id="level-title">Getting started</h3><p id="level-description">Every journey begins with one step.</p><div class="progress-track"><div class="progress-bar" id="level-bar"></div></div><small id="level-xp">0 / 100 XP</small></div></div>
-<div class="section-heading"><h3>Your stats</h3></div>
-<div class="stats-grid"><div class="stat-card card"><span>Tasks completed</span><strong id="stat-completed">0</strong></div><div class="stat-card card"><span>Total tasks</span><strong id="stat-total">0</strong></div><div class="stat-card card"><span>Completion rate</span><strong id="stat-rate">0%</strong></div><div class="stat-card card"><span>Total XP</span><strong id="stat-xp">0</strong></div></div>
-<div class="section-heading"><h3>Achievements & badges</h3><span class="badge-count" id="badge-count">0 unlocked</span></div><div class="card" id="achievements-list"></div>
-<div class="section-heading"><h3>Weekly report</h3></div><div class="card" id="weekly-report"></div>
-<div class="section-heading"><h3>Focus timer</h3></div>
-<div class="card"><div class="eyebrow timer-eyebrow">DEEP WORK MODE</div><div class="timer-display" id="timer-display">25:00</div><div class="timer-status" id="timer-status">Ready when you are.</div>
-<div class="timer-controls"><button id="timer-start" class="primary-button">Start</button><button id="timer-pause" class="secondary-button">Pause</button><button id="timer-reset" class="secondary-button">Reset</button></div>
-<div class="timer-settings"><label for="timer-duration">Session</label><select id="timer-duration"><option value="15">15 minutes</option><option value="25" selected>25 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></div>
-<p class="muted-copy centered">Focus sessions are for tracking only; take breaks when you need them.</p></div>
-<div class="section-heading"><h3>Recent activity</h3></div><div id="activity-list" class="task-list"></div>
-</section>
+          <div class="form-row">
+            <select id="task-category" aria-label="Kategorie"></select>
+            <select id="task-kind" aria-label="Aufgabentyp">
+              <option value="task">Normal</option>
+              <option value="daily">Täglich</option>
+            </select>
+          </div>
 
-<section class="view" id="view-settings">
-<div class="page-heading"><div class="eyebrow">MAKE IT YOURS</div><h2>Settings</h2><p>Your app, your routine.</p></div>
+          <button class="primary-button" type="submit">
+            ＋ Aufgabe erstellen
+          </button>
+        </form>
 
-<div class="card settings-card">
-<h3>Appearance</h3>
-<p>Automatically follow your iPhone settings or choose your own theme.</p>
-<label class="setting-label" for="theme-select">App theme</label>
-<select id="theme-select" class="setting-select">
-<option value="auto">Automatic — follow device</option>
-<option value="dark">Dark mode</option>
-<option value="light">Light mode</option>
-</select>
-<div class="settings-line"><span>Current appearance</span><span id="theme-status" class="mint-text">Dark</span></div>
-</div>
+        <div class="filter-row" id="task-filters">
+          <button class="filter-chip active" data-filter="all">Alle</button>
+          <button class="filter-chip" data-filter="open">Offen</button>
+          <button class="filter-chip" data-filter="done">Erledigt</button>
+        </div>
 
-<div class="card settings-card">
-<h3>Accent color</h3>
-<p>Choose your favorite color for buttons, highlights and progress bars.</p>
-<div class="color-options" id="color-options">
-  <button type="button" class="color-option" data-accent="mint" aria-label="Mint green"><span></span><small>Mint</small></button>
-  <button type="button" class="color-option" data-accent="blue" aria-label="Blue"><span></span><small>Blue</small></button>
-  <button type="button" class="color-option" data-accent="purple" aria-label="Purple"><span></span><small>Purple</small></button>
-  <button type="button" class="color-option" data-accent="pink" aria-label="Pink"><span></span><small>Pink</small></button>
-  <button type="button" class="color-option" data-accent="orange" aria-label="Orange"><span></span><small>Orange</small></button>
-  <button type="button" class="color-option" data-accent="red" aria-label="Red"><span></span><small>Red</small></button>
-  <button type="button" class="color-option" data-accent="cyan" aria-label="Cyan"><span></span><small>Cyan</small></button>
-  <button type="button" class="color-option" data-accent="yellow" aria-label="Yellow"><span></span><small>Yellow</small></button>
-  <button type="button" class="color-option" data-accent="white" aria-label="White"><span></span><small>White</small></button>
-  <button type="button" class="color-option" data-accent="lime" aria-label="Lime"><span></span><small>Lime</small></button>
-</div>
-</div>
+        <div id="task-lists" class="task-list"></div>
+      </section>
 
-<div class="card settings-card">
-<h3>DailyApp</h3><p>Midnight Edition · Version 2.1</p>
-<div class="settings-line"><span>Storage</span><span class="mint-text">On this device</span></div>
-<div class="settings-line"><span>Offline support</span><span id="offline-status">Available in browser</span></div>
-</div>
+      <!-- CALENDAR + ACTIVITY HEATMAP -->
+      <section class="view" id="view-calendar">
+        <div class="page-heading">
+          <p class="eyebrow">RÜCKBLICK</p>
+          <h2>Calendar</h2>
+          <p>Sieh dir deine Aufgaben und deine Aktivität an.</p>
+        </div>
 
-<div class="card settings-card">
-<h3>Manage categories</h3><p>Set custom XP rewards for your own task categories.</p>
-<form id="category-form" class="inline-form"><input id="category-name" type="text" maxlength="30" placeholder="Category name" required><input id="category-xp" type="number" min="1" max="1000" value="25" aria-label="XP reward" style="max-width:100px" required><button type="submit" class="primary-button">Add</button></form>
-<div id="category-list"></div>
-</div>
+        <article class="panel calendar-panel">
+          <div class="calendar-header">
+            <button class="icon-button small" id="prev-month"
+                    aria-label="Vorheriger Monat">‹</button>
+            <h3 id="calendar-month">Monat Jahr</h3>
+            <button class="icon-button small" id="next-month"
+                    aria-label="Nächster Monat">›</button>
+          </div>
 
-<div class="card settings-card">
-<h3>Backup & data</h3><p>Export a JSON backup to keep your data, or import a backup on this device. Import replaces the current app data.</p>
-<button id="export-data" class="secondary-button full-button">Export my data</button>
-<button id="import-data" class="secondary-button full-button">Import backup</button>
-<input id="import-file" type="file" accept=".json,application/json" hidden>
-<button id="reset-data" class="danger-button full-button">Reset all data</button>
-</div>
-<p class="footer-note">Built for consistency, not perfection.</p>
-</section>
-</main>
+          <div class="calendar-weekdays">
+            <span>Mo</span><span>Di</span><span>Mi</span>
+            <span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+          </div>
+          <div id="calendar-days" class="calendar-grid"></div>
+        </article>
 
-<nav class="bottom-nav" aria-label="Main navigation">
-<button class="nav-item active" data-view="home"><span class="nav-icon">⌂</span><span>Home</span></button>
-<button class="nav-item" data-view="tasks"><span class="nav-icon">☷</span><span>Tasks</span></button>
-<button class="nav-item" data-view="calendar"><span class="nav-icon">▦</span><span>Calendar</span></button>
-<button class="nav-item" data-view="progress"><span class="nav-icon">↗</span><span>Progress</span></button>
-<button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
-</nav>
-</div>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="script.js"></script>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">AUSGEWÄHLTER TAG</p>
+            <h2 id="selected-date-title">Heute</h2>
+          </div>
+        </div>
+        <div id="calendar-tasks" class="task-list"></div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">KONSISTENZ AUF EINEN BLICK</p>
+            <h2>Activity Heatmap</h2>
+          </div>
+        </div>
+
+        <article class="panel heatmap-panel">
+          <p class="muted">
+            Jeder Block zeigt gespeicherte Aufgabenaktivität an diesem Tag.
+            Frühere Aktivität wird nur angezeigt, wenn sie in deinen Daten
+            vorhanden ist.
+          </p>
+
+          <div class="heatmap-months" id="heatmap-months"></div>
+
+          <div class="heatmap-layout">
+            <div class="heatmap-weekdays">
+              <span>Mo</span><span>Mi</span><span>Fr</span><span>So</span>
+            </div>
+            <div id="activity-heatmap" class="heatmap-grid"
+                 aria-label="Aktivitäts-Heatmap"></div>
+          </div>
+
+          <div class="heatmap-legend">
+            <span>Weniger</span>
+            <i class="heat-0"></i>
+            <i class="heat-1"></i>
+            <i class="heat-2"></i>
+            <i class="heat-3"></i>
+            <i class="heat-4"></i>
+            <span>Mehr</span>
+          </div>
+
+          <p class="muted tiny" id="heatmap-summary"></p>
+        </article>
+      </section>
+
+      <!-- PROGRESS -->
+      <section class="view" id="view-progress">
+        <div class="page-heading">
+          <p class="eyebrow">DEINE ENTWICKLUNG</p>
+          <h2>Progress</h2>
+          <p>Fortschritt entsteht durch Wiederholung.</p>
+        </div>
+
+        <article class="hero-card level-card">
+          <div class="level-row">
+            <div>
+              <span class="pill">CURRENT LEVEL</span>
+              <h2 id="progress-level">Level 1</h2>
+              <p id="progress-title">Getting started</p>
+            </div>
+            <div class="level-orb" id="level-orb">1</div>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill" id="level-progress-fill"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="level-xp-text">0 / 100 XP</span>
+            <strong id="level-next">100 XP bis Level 2</strong>
+          </div>
+        </article>
+
+        <div class="stat-grid three">
+          <article class="stat-card">
+            <span class="stat-label">Aufgaben erledigt</span>
+            <strong id="progress-done">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Abschlussquote</span>
+            <strong id="progress-rate">0%</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Fokus-Sessions</span>
+            <strong id="progress-focus">0</strong>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SAMMLE XP</p>
+            <h2>Achievements</h2>
+          </div>
+        </div>
+        <div id="achievements" class="achievement-grid"></div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">DIESE WOCHE</p>
+            <h2>Wochenbericht</h2>
+          </div>
+        </div>
+        <article class="panel weekly-panel" id="weekly-report"></article>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">FOKUS</p>
+            <h2>Focus Timer</h2>
+          </div>
+        </div>
+        <article class="panel timer-panel">
+          <p class="muted">
+            Eine ruhige Arbeitseinheit. Pausen sind Teil des Plans.
+          </p>
+          <div class="timer-display" id="timer-display">25:00</div>
+
+          <div class="timer-presets">
+            <button class="filter-chip active" data-minutes="25">25 min</button>
+            <button class="filter-chip" data-minutes="15">15 min</button>
+            <button class="filter-chip" data-minutes="5">5 min Pause</button>
+          </div>
+
+          <div class="button-row">
+            <button class="primary-button" id="timer-start">Start</button>
+            <button class="secondary-button" id="timer-reset">Reset</button>
+          </div>
+          <p class="muted tiny" id="timer-status">Bereit, wenn du es bist.</p>
+        </article>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LETZTE AKTIVITÄT</p>
+            <h2>Recent activity</h2>
+          </div>
+        </div>
+        <div id="recent-activity" class="task-list"></div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="view" id="view-analytics">
+        <div class="page-heading">
+          <p class="eyebrow">DATEN STATT BAUCHGEFÜHL</p>
+          <h2>Analytics</h2>
+          <p>Erkenne Trends, ohne fehlende Daten zu erraten.</p>
+        </div>
+
+        <div class="stat-grid">
+          <article class="stat-card">
+            <span class="stat-label">Diese Woche</span>
+            <strong id="analytics-week-done">0</strong>
+            <small>erledigte Aufgaben</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Diese Woche</span>
+            <strong id="analytics-week-xp">0 XP</strong>
+            <small>verdiente XP</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Aktive Tage</span>
+            <strong id="analytics-active-days">0/7</strong>
+            <small>mit Aktivität</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Abschlussquote</span>
+            <strong id="analytics-rate">0%</strong>
+            <small>aller gespeicherten Aufgaben</small>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LETZTE 7 TAGE</p>
+            <h2>Aufgaben pro Tag</h2>
+          </div>
+        </div>
+        <article class="panel chart-panel">
+          <div id="analytics-week-chart" class="bar-chart"></div>
+          <p class="muted tiny">
+            Gezählt werden Aufgaben mit gespeichertem Abschlussdatum.
+          </p>
+        </article>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">WOCHENVERGLEICH</p>
+            <h2>Diese Woche vs. letzte</h2>
+          </div>
+        </div>
+        <article class="panel compare-panel" id="analytics-comparison"></article>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LANGFRISTIG</p>
+            <h2>Monatsübersicht</h2>
+          </div>
+        </div>
+        <article class="panel chart-panel">
+          <div id="analytics-month-chart" class="bar-chart"></div>
+          <p class="muted tiny">
+            Die letzten 6 Monate nach gespeicherten Abschlussdaten.
+          </p>
+        </article>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">DEIN MUSTER</p>
+            <h2>Zusammenfassung</h2>
+          </div>
+        </div>
+        <article class="panel" id="analytics-insights"></article>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="page-heading">
+          <p class="eyebrow">DEIN WORKSPACE</p>
+          <h2>Settings</h2>
+          <p>Pass DailyApp an dich an.</p>
+        </div>
+
+        <article class="panel settings-group">
+          <h3>Appearance</h3>
+          <label for="theme-select">Darstellung</label>
+          <select id="theme-select">
+            <option value="dark">Midnight Dark</option>
+            <option value="light">Light Mode</option>
+            <option value="system">System</option>
+          </select>
+
+          <label>Akzentfarbe</label>
+          <div id="accent-options" class="accent-options"></div>
+        </article>
+
+        <article class="panel settings-group">
+          <h3>Kategorien</h3>
+          <p class="muted">Verwalte die Kategorien für deine Aufgaben.</p>
+          <form id="category-form" class="form-row">
+            <input id="category-input" maxlength="30"
+                   placeholder="Neue Kategorie" required>
+            <button class="primary-button" type="submit">＋</button>
+          </form>
+          <div id="category-list" class="category-list"></div>
+        </article>
+
+        <article class="panel settings-group">
+          <h3>Backup & Daten</h3>
+          <p class="muted">
+            Exportiere deine Daten regelmäßig, bevor du größere Änderungen machst.
+          </p>
+          <div class="button-stack">
+            <button class="secondary-button" id="export-data">
+              Daten exportieren (JSON)
+            </button>
+            <label class="secondary-button file-button" for="import-file">
+              Backup importieren (JSON)
+            </label>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
+            <button class="danger-button" id="reset-data">
+              Alle Daten zurücksetzen
+            </button>
+          </div>
+        </article>
+
+        <article class="panel settings-group about-card">
+          <h3>DailyApp — Midnight Edition</h3>
+          <p class="muted">Version 2.2 · lokal gespeichert auf diesem Gerät</p>
+          <p class="muted tiny">
+            Deine Aufgaben und Einstellungen bleiben im Browser gespeichert.
+            Bei gelöschten Browserdaten kann die lokale Speicherung verloren gehen.
+          </p>
+        </article>
+      </section>
+
+    </main>
+
+    <!-- SIX NAVIGATION ITEMS -->
+    <nav class="bottom-nav" aria-label="Hauptnavigation">
+      <button class="nav-item active" data-view="home">
+        <span>⌂</span><small>Home</small>
+      </button>
+      <button class="nav-item" data-view="tasks">
+        <span>☑</span><small>Tasks</small>
+      </button>
+      <button class="nav-item" data-view="calendar">
+        <span>▦</span><small>Calendar</small>
+      </button>
+      <button class="nav-item" data-view="progress">
+        <span>↗</span><small>Progress</small>
+      </button>
+      <button class="nav-item" data-view="analytics">
+        <span>▥</span><small>Analytics</small>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <span>⚙</span><small>Settings</small>
+      </button>
+    </nav>
+
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
 </body>
 </html>
-
+```
