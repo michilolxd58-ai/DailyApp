@@ -488,3 +488,88 @@ button {
   -webkit-appearance: none;
   appearance: none;
 }
+/* All 10 accent colors */
+:root[data-accent="cyan"] {
+  --mint: #35e0d0;
+  --mint-rgb: 53,224,208;
+}
+
+:root[data-accent="yellow"] {
+  --mint: #ffe14a;
+  --mint-rgb: 255,225,74;
+}
+
+:root[data-accent="white"] {
+  --mint: #f0f0f0;
+  --mint-rgb: 240,240,240;
+}
+
+:root[data-accent="lime"] {
+  --mint: #65ff8f;
+  --mint-rgb: 101,255,143;
+}
+
+/* Mobile-friendly color palette */
+.color-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.color-option {
+  min-width: 0;
+  min-height: 76px;
+  padding: 12px 6px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.color-option span {
+  display: block;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+}
+
+.color-option[data-accent="white"] span {
+  border: 1px solid #888;
+}
+
+.color-option.selected {
+  border: 2px solid var(--mint);
+  background: var(--soft-accent);
+}
+
+@media (max-width: 380px) {
+  .color-options {
+    gap: 8px;
+  }
+
+  .color-option {
+    min-height: 70px;
+  }
+}
+
+/* iPhone touch fixes */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
