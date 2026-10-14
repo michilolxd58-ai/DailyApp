@@ -1639,17 +1639,21 @@
       return;
     }
 
-   var accent = target.closest("button[data-accent]");
+ var accentButton = target.closest(
+  "#accent-options button[data-accent]"
+);
 
-    if (
-      accent &&
-      ACCENTS[accent.getAttribute("data-accent")]
-    ) {
-      appearance.accent = accent.getAttribute("data-accent");
-      saveAppearance();
-      toast("Akzentfarbe geändert.");
-      return;
-    }
+if (
+  accentButton &&
+  ACCENTS[accentButton.getAttribute("data-accent")]
+) {
+  appearance.accent =
+    accentButton.getAttribute("data-accent");
+
+  saveAppearance();
+  toast("Akzentfarbe geändert.");
+  return;
+}
 
     var categoryRemove = target.closest("[data-delete-cat]");
 
