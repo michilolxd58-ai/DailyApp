@@ -1,5 +1,5 @@
 
-/* DailyApp 2.3 — clean replacement for the current index.html */
+/* DailyApp 2.3 — Industrial Toxic */
 (function () {
   "use strict";
 
@@ -14,25 +14,21 @@
   ];
 
   var TASK_POOL = [
-    "Make your bed",
-    "Drink a glass of water",
-    "Read for 10 minutes",
-    "Tidy your desk for 5 minutes",
-    "Take a short walk",
-    "Stretch for 5 minutes",
-    "Write down your top priority",
-    "Review your notes",
+    "Make your bed", "Drink a glass of water",
+    "Read for 10 minutes", "Tidy your desk for 5 minutes",
+    "Take a short walk", "Stretch for 5 minutes",
+    "Write down your top priority", "Review your notes",
     "Prepare your bag for tomorrow",
     "Learn one new coding concept",
     "Finish a small school task",
     "Put your phone away for 20 minutes",
-    "Plan tomorrow's first task",
-    "Clean one small area",
+    "Plan tomorrow's first task", "Clean one small area",
     "Practice a skill for 15 minutes",
     "Spend 10 minutes learning something"
   ];
 
   var ACCENTS = {
+    toxic: ["#b6ff00", "182,255,0"],
     mint: ["#63e6b0", "99,230,176"],
     blue: ["#73b7ff", "115,183,255"],
     purple: ["#b69cff", "182,156,255"],
@@ -117,33 +113,33 @@
   }
 
   function setText(selector, value) {
-    var element = $(selector);
-    if (element) element.textContent = String(value);
+    var el = $(selector);
+    if (el) el.textContent = String(value);
   }
 
   function setWidth(selector, value) {
-    var element = $(selector);
-    if (element) {
-      element.style.width =
+    var el = $(selector);
+    if (el) {
+      el.style.width =
         Math.max(0, Math.min(100, Number(value) || 0)) + "%";
     }
   }
 
   function toast(message) {
-    var element = $("#toast");
+    var el = $("#toast");
 
-    if (!element) {
+    if (!el) {
       console.log(message);
       return;
     }
 
-    element.textContent = message;
-    element.classList.add("show");
+    el.textContent = message;
+    el.classList.add("show");
 
     if (toastTimer) clearTimeout(toastTimer);
 
     toastTimer = setTimeout(function () {
-      element.classList.remove("show");
+      el.classList.remove("show");
     }, 2400);
   }
 
@@ -192,7 +188,10 @@
         return {
           id: String(item.id || makeId()),
           name: String(item.name || "Category").slice(0, 30),
-          xp: Math.max(1, Math.min(1000, Number(item.xp) || 10))
+          xp: Math.max(
+            1,
+            Math.min(1000, Number(item.xp) || 10)
+          )
         };
       });
 
@@ -229,7 +228,9 @@
           kind: String(task.kind || "custom")
         };
 
-        if (isDateKey(task.day)) item.day = task.day;
+        if (isDateKey(task.day)) {
+          item.day = task.day;
+        }
 
         if (
           task.xpReward !== undefined &&
@@ -257,13 +258,18 @@
         0,
         Number(raw.focusSessions) || 0
       ),
-      unlocked: Array.isArray(raw.unlocked) ? raw.unlocked : []
+      unlocked: Array.isArray(raw.unlocked)
+        ? raw.unlocked
+        : []
     };
   }
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(state)
+      );
     } catch (error) {
       console.warn("Could not save DailyApp data:", error);
       toast("Could not save data in this browser.");
@@ -278,20 +284,31 @@
 
       if (saved && typeof saved === "object") {
         return {
-          theme: ["dark", "light", "system", "auto"].indexOf(
-            saved.theme
-          ) >= 0 ? saved.theme : "dark",
-          accent: Object.prototype.hasOwnProperty.call(
-            ACCENTS,
-            saved.accent
-          ) ? saved.accent : "mint"
+          theme: [
+            "dark", "light", "system", "auto"
+          ].indexOf(saved.theme) >= 0
+            ? saved.theme
+            : "dark",
+          accent: saved.accent === "mint"
+            ? "toxic"
+            : (
+              Object.prototype.hasOwnProperty.call(
+                ACCENTS,
+                saved.accent
+              )
+                ? saved.accent
+                : "toxic"
+            )
         };
       }
     } catch (error) {
-      // Use default appearance.
+      // Use defaults.
     }
 
-    return { theme: "dark", accent: "mint" };
+    return {
+      theme: "dark",
+      accent: "toxic"
+    };
   }
 
   function actualTheme() {
@@ -300,9 +317,11 @@
       appearance.theme === "auto"
     ) {
       return window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
+        window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches
+          ? "dark"
+          : "light";
     }
 
     return appearance.theme;
@@ -310,18 +329,28 @@
 
   function applyAppearance() {
     var root = document.documentElement;
-    var accent = ACCENTS[appearance.accent] || ACCENTS.mint;
+    var accent = ACCENTS[appearance.accent] || ACCENTS.toxic;
 
     root.setAttribute("data-theme", actualTheme());
     root.setAttribute("data-accent", appearance.accent);
+
     root.style.setProperty("--accent", accent[0]);
     root.style.setProperty("--accent-rgb", accent[1]);
+    root.style.setProperty("--toxic", accent[0]);
+    root.style.setProperty("--toxic-bright", accent[0]);
+    root.style.setProperty("--toxic-rgb", accent[1]);
+    root.style.setProperty(
+      "--border",
+      "rgba(" + accent[1] + ", .20)"
+    );
 
     var themeSelect = $("#theme-select");
 
     if (themeSelect) {
       themeSelect.value =
-        appearance.theme === "auto" ? "system" : appearance.theme;
+        appearance.theme === "auto"
+          ? "system"
+          : appearance.theme;
     }
 
     var accentContainer = $("#accent-options");
@@ -330,25 +359,31 @@
       accentContainer &&
       !accentContainer.getAttribute("data-built")
     ) {
-      accentContainer.innerHTML = Object.keys(ACCENTS)
-        .map(function (name) {
-          return '<button type="button" class="accent-swatch" ' +
+      accentContainer.innerHTML =
+        Object.keys(ACCENTS).map(function (name) {
+          return (
+            '<button type="button" class="accent-swatch" ' +
             'data-accent="' + name + '" ' +
             'aria-label="' + name + ' accent color" ' +
             'title="' + name + '" ' +
-            'style="background:' + ACCENTS[name][0] + '"></button>';
-        })
-        .join("");
+            'style="background:' + ACCENTS[name][0] +
+            '"></button>'
+          );
+        }).join("");
 
       accentContainer.setAttribute("data-built", "yes");
     }
 
     $$("[data-accent]").forEach(function (button) {
       var selected =
-        button.getAttribute("data-accent") === appearance.accent;
+        button.getAttribute("data-accent") ===
+        appearance.accent;
 
       button.classList.toggle("active", selected);
-      button.setAttribute("aria-pressed", String(selected));
+      button.setAttribute(
+        "aria-pressed",
+        String(selected)
+      );
     });
   }
 
@@ -474,27 +509,20 @@
 
     return state.tasks.filter(function (task) {
       return task.created === today ||
-        (task.kind === "daily-plan" && task.day === today);
+        (
+          task.kind === "daily-plan" &&
+          task.day === today
+        );
     });
-  }
-
-  function dailyEarned(day) {
-    day = day || todayKey();
-
-    return state.tasks
-      .filter(function (task) {
-        return task.done && task.completedAt === day;
-      })
-      .reduce(function (sum, task) {
-        return sum + taskXP(task);
-      }, 0);
   }
 
   function streakInfo() {
     var days = {};
 
     completedTasks().forEach(function (task) {
-      if (task.completedAt) days[task.completedAt] = true;
+      if (task.completedAt) {
+        days[task.completedAt] = true;
+      }
     });
 
     var date = new Date();
@@ -523,7 +551,8 @@
 
       if (previous) {
         var diff = Math.round(
-          (parsed.getTime() - previous.getTime()) / 86400000
+          (parsed.getTime() - previous.getTime()) /
+          86400000
         );
 
         run = diff === 1 ? run + 1 : 1;
@@ -565,47 +594,58 @@
   }
 
   function xpBetween(start, end) {
-    return state.tasks
-      .filter(function (task) {
-        return task.done &&
-          task.completedAt &&
-          task.completedAt >= start &&
-          task.completedAt <= end;
-      })
-      .reduce(function (sum, task) {
-        return sum + taskXP(task);
-      }, 0);
+    return state.tasks.filter(function (task) {
+      return task.done &&
+        task.completedAt &&
+        task.completedAt >= start &&
+        task.completedAt <= end;
+    }).reduce(function (sum, task) {
+      return sum + taskXP(task);
+    }, 0);
   }
 
   function taskHTML(task, allowDelete) {
     var cat = getCategory(task.category);
 
     var status = task.done
-      ? (task.completedAt
-        ? "Completed " + task.completedAt
-        : "Completed")
-      : (task.created === todayKey()
-        ? "Added today"
-        : "Added " + task.created);
+      ? (
+        task.completedAt
+          ? "Completed " + task.completedAt
+          : "Completed"
+      )
+      : (
+        task.created === todayKey()
+          ? "Added today"
+          : "Added " + task.created
+      );
 
-    var html = '<article class="task-card ' +
+    var html =
+      '<article class="task-card ' +
       (task.done ? "done" : "") + '">';
 
-    html += '<button type="button" class="task-check" ' +
+    html +=
+      '<button type="button" class="task-check" ' +
       'data-toggle="' + escapeHTML(task.id) + '" ' +
-      'aria-label="' + (task.done ? "Mark active" : "Complete task") +
+      'aria-label="' +
+      (task.done ? "Mark active" : "Complete task") +
       '" aria-pressed="' + String(task.done) + '">' +
       (task.done ? "✓" : "") + '</button>';
 
-    html += '<div class="task-copy">' +
-      '<div class="task-title">' + escapeHTML(task.text) + '</div>' +
-      '<div class="task-sub">' + escapeHTML(cat.name) +
-      ' · ' + escapeHTML(status) + '</div></div>';
+    html +=
+      '<div class="task-copy">' +
+      '<div class="task-title">' +
+      escapeHTML(task.text) + '</div>' +
+      '<div class="task-sub">' +
+      escapeHTML(cat.name) + ' · ' +
+      escapeHTML(status) + '</div></div>';
 
-    html += '<span class="task-xp">+' + taskXP(task) + ' XP</span>';
+    html +=
+      '<span class="task-xp">+' +
+      taskXP(task) + ' XP</span>';
 
     if (allowDelete) {
-      html += '<button type="button" class="delete-task" ' +
+      html +=
+        '<button type="button" class="delete-task" ' +
         'data-delete="' + escapeHTML(task.id) + '" ' +
         'aria-label="Delete task">×</button>';
     }
@@ -615,6 +655,7 @@
 
   function renderHome() {
     var tasks = tasksForToday();
+
     var done = tasks.filter(function (task) {
       return task.done;
     }).length;
@@ -636,13 +677,17 @@
     setText(
       "#today-label",
       "DEIN TAG · " +
-        new Date().toLocaleDateString(
-          "de-AT",
-          { weekday: "long" }
-        ).toUpperCase()
+      new Date().toLocaleDateString(
+        "de-AT",
+        { weekday: "long" }
+      ).toUpperCase()
     );
 
-    setText("#daily-progress-text", done + " von " + tasks.length + " erledigt");
+    setText(
+      "#daily-progress-text",
+      done + " von " + tasks.length + " erledigt"
+    );
+
     setText("#daily-progress-percent", percent + "%");
     setWidth("#daily-progress-fill", percent);
     setText("#home-xp", totalXP());
@@ -666,7 +711,10 @@
 
     var tasks = state.tasks.slice().sort(function (a, b) {
       if (a.done !== b.done) return a.done ? 1 : -1;
-      return String(b.created).localeCompare(String(a.created));
+
+      return String(b.created).localeCompare(
+        String(a.created)
+      );
     }).filter(function (task) {
       if (currentFilter === "open") return !task.done;
       if (currentFilter === "done") return task.done;
@@ -688,7 +736,8 @@
 
       select.innerHTML = state.categories.map(function (item) {
         return '<option value="' + escapeHTML(item.id) + '">' +
-          escapeHTML(item.name) + ' · ' + item.xp + ' XP</option>';
+          escapeHTML(item.name) + ' · ' +
+          item.xp + ' XP</option>';
       }).join("");
 
       if (state.categories.some(function (item) {
@@ -709,11 +758,13 @@
         return '<div class="category-row"><div><strong>' +
           escapeHTML(item.name) + '</strong><small>' +
           item.xp + ' XP per task</small></div>' +
-          (isDefault
-            ? ""
-            : '<button type="button" class="delete-task" data-delete-cat="' +
-              escapeHTML(item.id) +
-              '" aria-label="Delete category">×</button>') +
+          (
+            isDefault
+              ? ""
+              : '<button type="button" class="delete-task" ' +
+                'data-delete-cat="' + escapeHTML(item.id) +
+                '" aria-label="Delete category">×</button>'
+          ) +
           '</div>';
       }).join("");
     }
@@ -739,7 +790,10 @@
         new Date(year, month, 1).getDay() + 6
       ) % 7;
 
-      var numberDays = new Date(year, month + 1, 0).getDate();
+      var numberDays = new Date(
+        year, month + 1, 0
+      ).getDate();
+
       var html = "";
 
       for (var i = 0; i < offset; i++) {
@@ -750,7 +804,8 @@
         var key = dateKey(new Date(year, month, day));
 
         var has = state.tasks.some(function (task) {
-          return task.created === key || task.completedAt === key;
+          return task.created === key ||
+            task.completedAt === key;
         });
 
         var classes = "calendar-day" +
@@ -758,7 +813,8 @@
           (key === selectedDate ? " selected" : "") +
           (has ? " has-activity" : "");
 
-        html += '<button type="button" class="' + classes +
+        html +=
+          '<button type="button" class="' + classes +
           '" data-date="' + key +
           '" aria-pressed="' + String(key === selectedDate) +
           '">' + day + '</button>';
@@ -833,7 +889,8 @@
 
       if (date > today) level = 0;
 
-      html += '<div class="heat-cell heat-' + level +
+      html +=
+        '<div class="heat-cell heat-' + level +
         '" title="' + key + ': ' + count +
         ' completed task(s)" aria-label="' +
         key + ': ' + count + '"></div>';
@@ -852,8 +909,12 @@
 
         if (d.getMonth() !== lastMonth) {
           labels.push(
-            d.toLocaleDateString("en-GB", { month: "short" })
+            d.toLocaleDateString(
+              "en-GB",
+              { month: "short" }
+            )
           );
+
           lastMonth = d.getMonth();
         }
       }
@@ -868,7 +929,8 @@
     if (summary) {
       summary.textContent = completedTasks().filter(function (task) {
         return task.completedAt &&
-          task.completedAt >= dateKey(shiftDate(today, -364));
+          task.completedAt >=
+            dateKey(shiftDate(today, -364));
       }).length + " Aufgaben in den letzten 12 Monaten erledigt.";
     }
   }
@@ -895,7 +957,8 @@
     setText("#level-xp-text", info.inside + " / 100 XP");
     setText(
       "#level-next",
-      (100 - info.inside) + " XP bis Level " + (info.level + 1)
+      (100 - info.inside) + " XP bis Level " +
+      (info.level + 1)
     );
     setText("#progress-done", done);
     setText(
@@ -928,8 +991,12 @@
     ];
 
     state.unlocked = achievements
-      .filter(function (item) { return item.done; })
-      .map(function (item) { return item.id; });
+      .filter(function (item) {
+        return item.done;
+      })
+      .map(function (item) {
+        return item.id;
+      });
 
     var achievementGrid = $("#achievements");
 
@@ -937,10 +1004,11 @@
       achievementGrid.innerHTML = achievements.map(function (item) {
         return '<article class="achievement ' +
           (item.done ? "unlocked" : "locked") +
-          '"><div class="achievement-icon">' + item.icon +
-          '</div><h3>' + escapeHTML(item.name) +
-          '</h3><p>' + escapeHTML(item.desc) +
-          '</p><small>' + (item.done ? "UNLOCKED" : "LOCKED") +
+          '"><div class="achievement-icon">' +
+          item.icon + '</div><h3>' +
+          escapeHTML(item.name) + '</h3><p>' +
+          escapeHTML(item.desc) + '</p><small>' +
+          (item.done ? "UNLOCKED" : "LOCKED") +
           '</small></article>';
       }).join("");
     }
@@ -951,7 +1019,8 @@
       var keys = weekKeys(new Date());
 
       var weekTasks = state.tasks.filter(function (task) {
-        return task.done && keys.indexOf(task.completedAt) >= 0;
+        return task.done &&
+          keys.indexOf(task.completedAt) >= 0;
       });
 
       var activeDays = {};
@@ -978,13 +1047,11 @@
     var recent = $("#recent-activity");
 
     if (recent) {
-      var activity = completedTasks()
-        .sort(function (a, b) {
-          return String(b.completedAt || "").localeCompare(
-            String(a.completedAt || "")
-          );
-        })
-        .slice(0, 8);
+      var activity = completedTasks().sort(function (a, b) {
+        return String(b.completedAt || "").localeCompare(
+          String(a.completedAt || "")
+        );
+      }).slice(0, 8);
 
       recent.innerHTML = activity.length
         ? activity.map(function (task) {
@@ -997,15 +1064,16 @@
   }
 
   function barHTML(label, value, max) {
-    var height = max > 0 ? Math.max(0, value / max * 100) : 0;
+    var height = max > 0
+      ? Math.max(0, value / max * 100)
+      : 0;
 
-    return '<div class="bar-col" title="' + escapeHTML(label) +
-      ': ' + value + '">' +
-      '<span class="bar-value">' + value + '</span>' +
-      '<div class="bar-track"><div class="bar-fill" style="height:' +
-      height + '%"></div></div>' +
-      '<span class="bar-label">' + escapeHTML(label) + '</span>' +
-      '</div>';
+    return '<div class="bar-col" title="' +
+      escapeHTML(label) + ': ' + value +
+      '"><span class="bar-value">' + value +
+      '</span><div class="bar-track"><div class="bar-fill" style="height:' +
+      height + '%"></div></div><span class="bar-label">' +
+      escapeHTML(label) + '</span></div>';
   }
 
   function renderAnalytics() {
@@ -1015,7 +1083,10 @@
     var previousEnd = dateKey(shiftDate(today, -7));
 
     var thisWeek = countDoneBetween(start, todayKey());
-    var previousWeek = countDoneBetween(previousStart, previousEnd);
+    var previousWeek = countDoneBetween(
+      previousStart,
+      previousEnd
+    );
     var xpWeek = xpBetween(start, todayKey());
 
     var total = state.tasks.length;
@@ -1040,12 +1111,19 @@
     var activeDays = {};
 
     state.tasks.forEach(function (task) {
-      if (task.done && keys.indexOf(task.completedAt) >= 0) {
+      if (
+        task.done &&
+        keys.indexOf(task.completedAt) >= 0
+      ) {
         activeDays[task.completedAt] = true;
       }
     });
 
-    setText("#analytics-active-days", Object.keys(activeDays).length + "/7");
+    setText(
+      "#analytics-active-days",
+      Object.keys(activeDays).length + "/7"
+    );
+
     setText(
       "#analytics-rate",
       (total ? Math.round(done / total * 100) : 0) + "%"
@@ -1076,12 +1154,15 @@
         '<strong>Diese 7 Tage</strong><span>' + thisWeek +
         ' Aufgaben</span></div><div class="compare-bars">' +
         '<div class="compare-bar"><span style="width:' +
-        (thisWeek / compareMax * 100) + '%"></span></div></div></div>' +
+        (thisWeek / compareMax * 100) +
+        '%"></span></div></div></div>' +
         '<div class="compare-metric"><div class="compare-top">' +
-        '<strong>Vorherige 7 Tage</strong><span>' + previousWeek +
-        ' Aufgaben</span></div><div class="compare-bars">' +
-        '<div class="compare-bar previous"><span style="width:' +
-        (previousWeek / compareMax * 100) + '%"></span></div></div></div>';
+        '<strong>Vorherige 7 Tage</strong><span>' +
+        previousWeek + ' Aufgaben</span></div>' +
+        '<div class="compare-bars"><div class="compare-bar previous">' +
+        '<span style="width:' +
+        (previousWeek / compareMax * 100) +
+        '%"></span></div></div></div>';
     }
 
     var months = [];
@@ -1141,9 +1222,10 @@
           : "Deine Aufgabenanzahl entspricht dem vorherigen 7-Tage-Zeitraum.";
 
       insight.innerHTML =
-        '<p class="insight-line">' + escapeHTML(message) + '</p>' +
-        '<p class="insight-line">Insgesamt erledigt: ' + done +
-        ' Aufgaben · ' + totalXP() + ' XP.</p>' +
+        '<p class="insight-line">' +
+        escapeHTML(message) + '</p>' +
+        '<p class="insight-line">Insgesamt erledigt: ' +
+        done + ' Aufgaben · ' + totalXP() + ' XP.</p>' +
         '<p class="insight-line">Beste Serie: ' +
         streakInfo().best + ' Tage.</p>';
     }
@@ -1196,9 +1278,10 @@
       return item.id === id;
     });
 
-    if (!task || !window.confirm(
-      'Aufgabe "' + task.text + '" löschen?'
-    )) return;
+    if (
+      !task ||
+      !window.confirm('Aufgabe "' + task.text + '" löschen?')
+    ) return;
 
     state.tasks = state.tasks.filter(function (item) {
       return item.id !== id;
@@ -1283,7 +1366,9 @@
       renderHeatmap();
     }
 
-    if (view === "analytics") renderAnalytics();
+    if (view === "analytics") {
+      renderAnalytics();
+    }
 
     window.scrollTo(0, 0);
   }
@@ -1324,7 +1409,10 @@
     timerRunning = false;
     updateTimerDisplay();
 
-    setText("#timer-status", "Pausiert. Weiter, wenn du bereit bist.");
+    setText(
+      "#timer-status",
+      "Pausiert. Weiter, wenn du bereit bist."
+    );
   }
 
   function startTimer() {
@@ -1333,7 +1421,9 @@
       return;
     }
 
-    if (timerSeconds <= 0) timerSeconds = 25 * 60;
+    if (timerSeconds <= 0) {
+      timerSeconds = 25 * 60;
+    }
 
     timerRunning = true;
     updateTimerDisplay();
@@ -1346,7 +1436,8 @@
       if (timerSeconds === 0) {
         pauseTimer();
 
-        state.focusSessions = (state.focusSessions || 0) + 1;
+        state.focusSessions =
+          (state.focusSessions || 0) + 1;
 
         save();
         renderProgress();
@@ -1428,14 +1519,19 @@
           !Array.isArray(data.tasks) ||
           !Array.isArray(data.categories)
         ) {
-          throw new Error("Das ist kein gültiges DailyApp-Backup.");
+          throw new Error(
+            "Das ist kein gültiges DailyApp-Backup."
+          );
         }
 
         if (!window.confirm(
           "Backup importieren? Deine aktuellen Aufgaben werden ersetzt."
         )) return;
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(data)
+        );
 
         state = loadState();
         ensureDailyTasks();
@@ -1443,7 +1539,8 @@
         toast("Backup importiert.");
       } catch (error) {
         window.alert(
-          error.message || "Backup konnte nicht importiert werden."
+          error.message ||
+          "Backup konnte nicht importiert werden."
         );
       }
     };
@@ -1513,6 +1610,7 @@
         calendarCursor.getMonth() - 1,
         1
       );
+
       renderCalendar();
       return;
     }
@@ -1523,6 +1621,7 @@
         calendarCursor.getMonth() + 1,
         1
       );
+
       renderCalendar();
       return;
     }
@@ -1555,7 +1654,9 @@
     var categoryRemove = target.closest("[data-delete-cat]");
 
     if (categoryRemove) {
-      deleteCategory(categoryRemove.getAttribute("data-delete-cat"));
+      deleteCategory(
+        categoryRemove.getAttribute("data-delete-cat")
+      );
       return;
     }
 
@@ -1634,9 +1735,7 @@
   function handleChange(event) {
     if (event.target.matches("#theme-select")) {
       appearance.theme = [
-        "dark",
-        "light",
-        "system"
+        "dark", "light", "system"
       ].indexOf(event.target.value) >= 0
         ? event.target.value
         : "dark";
@@ -1647,7 +1746,8 @@
     }
 
     if (event.target.matches("#import-file")) {
-      var file = event.target.files && event.target.files[0];
+      var file =
+        event.target.files && event.target.files[0];
 
       if (file) importData(file);
 
