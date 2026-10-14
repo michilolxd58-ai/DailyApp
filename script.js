@@ -105,17 +105,18 @@ const BONUS_POOL=[
 "Write down your top three priorities","Put away distractions for one focus block"
 ];
 
-const ACCENTS={
-mint:{color:"#b6ff00",rgb:"182,255,0"},
-blue:{color:"#50a9ff",rgb:"80,169,255"},
-purple:{color:"#b18aff",rgb:"177,138,255"},
-pink:{color:"#ff7fba",rgb:"255,127,186"},
-orange:{color:"#ffad42",rgb:"255,173,66"},
-red:{color:"#ff626c",rgb:"255,98,108"}
-cyan: {color:"#35e0d0",rgb:"53,224,208"},
-yellow: {color:"#ffe14a",rgb:"255,225,74"},
-white: {color:"#f0f0f0",rgb:"240,240,240"},
-lime: {color:"#65ff8f",rgb:"101,255,143"}
+
+const ACCENTS = {
+  mint:   { color: "#b6ff00", rgb: "182,255,0" },
+  blue:   { color: "#50a9ff", rgb: "80,169,255" },
+  purple: { color: "#b18aff", rgb: "177,138,255" },
+  pink:   { color: "#ff7fba", rgb: "255,127,186" },
+  orange: { color: "#ffad42", rgb: "255,173,66" },
+  red:    { color: "#ff626c", rgb: "255,98,108" },
+  cyan:   { color: "#35e0d0", rgb: "53,224,208" },
+  yellow: { color: "#ffe14a", rgb: "255,225,74" },
+  white:  { color: "#f0f0f0", rgb: "240,240,240" },
+  lime:   { color: "#65ff8f", rgb: "101,255,143" }
 };
 
 
