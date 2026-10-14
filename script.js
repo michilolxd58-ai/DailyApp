@@ -1639,7 +1639,7 @@
       return;
     }
 
-    var accent = target.closest("[data-accent]");
+   var accent = target.closest("button[data-accent]");
 
     if (
       accent &&
