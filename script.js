@@ -35,6 +35,7 @@ const TASK_POOL = [
   "Study one difficult topic",
   "Read 5 pages of a book",
   "Learn 5 new English words",
+  "Do 4 Math problems",
   "Practice maths for 10 minutes",
   "Organize your school documents",
   "Prepare for the next school day",
@@ -62,13 +63,11 @@ const TASK_POOL = [
   // Discipline & productivity
   "Put your phone away for 20 minutes",
   "Complete your most important task",
-  "Start a task you've been avoiding",
   "Work on one task without distractions",
   "Clean your desk",
   "Organize your files",
   "Plan tomorrow's first task",
   "Finish what you started",
-  "Spend 10 minutes on a personal project",
   "Remove one unnecessary distraction",
   "Write down one thing you learned today",
   "Review your progress for the day",
@@ -81,14 +80,10 @@ const TASK_POOL = [
   "Fix a bug in a project",
   "Improve one part of your app",
   "Write a few lines of code",
-  "Sketch a new project idea",
-  "Work on a DIY project for 15 minutes",
   "Learn something about electronics",
   "Document your latest project progress",
   "Test one feature of your app",
-  "Organize your project files",
-  "Write down an idea for a future project",
-
+  
   // Evening routine
   "Tidy up before bed",
   "Brush your teeth before sleeping",
@@ -117,7 +112,12 @@ purple:{color:"#b18aff",rgb:"177,138,255"},
 pink:{color:"#ff7fba",rgb:"255,127,186"},
 orange:{color:"#ffad42",rgb:"255,173,66"},
 red:{color:"#ff626c",rgb:"255,98,108"}
+cyan: {color:"#35e0d0",rgb:"53,224,208"},
+yellow: {color:"#ffe14a",rgb:"255,225,74"},
+white: {color:"#f0f0f0",rgb:"240,240,240"},
+lime: {color:"#65ff8f",rgb:"101,255,143"}
 };
+
 
 const ACHIEVEMENTS=[
 {id:"first",icon:"🌱",name:"First Step",desc:"Complete your first task.",test:s=>s.tasks.some(t=>t.done)},
