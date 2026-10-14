@@ -15,16 +15,93 @@ const DEFAULT_CATEGORIES=[
 
 const DAILY_GOALS=[60,70,80,90,100,110,120,140];
 
-const TASK_POOL=[
-"Make your bed","Drink a glass of water","Read for 10 minutes",
-"Tidy your desk for 5 minutes","Take a short walk","Stretch for 5 minutes",
-"Write down your top priority","Review your notes",
-"Do one task you've been postponing","Put your phone away for 20 minutes",
-"Prepare your bag for tomorrow","Spend 10 minutes learning something",
-"Clean one small area","Take a few calm breaths","Plan tomorrow's first task",
-"Do a quick room reset","Write down one thing that went well",
-"Finish a small school task"
+
+const TASK_POOL = [
+  // Morning routine
+  "Make your bed",
+  "Drink a glass of water",
+  "Open the curtains",
+  "Wash your face",
+  "Brush your teeth",
+  "Get dressed for the day",
+  "Prepare your school bag",
+  "Eat breakfast",
+  "Check today's schedule",
+  "Tidy your room for 5 minutes",
+
+  // School & learning
+  "Review your notes for 10 minutes",
+  "Finish one homework task",
+  "Study one difficult topic",
+  "Read 5 pages of a book",
+  "Learn 5 new English words",
+  "Practice maths for 10 minutes",
+  "Organize your school documents",
+  "Prepare for the next school day",
+  "Review mistakes from a test",
+  "Spend 15 minutes learning something new",
+  "Complete an assignment you postponed",
+  "Clean up your digital school folders",
+  "Write down your top 3 priorities",
+  "Practice a skill for 15 minutes",
+
+  // Fitness & wellbeing
+  "Take a short walk",
+  "Stretch for 5 minutes",
+  "Do a short workout",
+  "Practice push-ups with good form",
+  "Practice pull-ups if available",
+  "Go outside for fresh air",
+  "Take a screen break",
+  "Drink water during the day",
+  "Take a few calm breaths",
+  "Get ready for bed on time",
+  "Take a proper break after studying",
+  "Spend 10 minutes relaxing without your phone",
+
+  // Discipline & productivity
+  "Put your phone away for 20 minutes",
+  "Complete your most important task",
+  "Start a task you've been avoiding",
+  "Work on one task without distractions",
+  "Clean your desk",
+  "Organize your files",
+  "Plan tomorrow's first task",
+  "Finish what you started",
+  "Spend 10 minutes on a personal project",
+  "Remove one unnecessary distraction",
+  "Write down one thing you learned today",
+  "Review your progress for the day",
+  "Prepare everything for tomorrow",
+  "Complete a 15-minute focus session",
+
+  // Coding & creativity
+  "Write a small Python program",
+  "Learn one new coding concept",
+  "Fix a bug in a project",
+  "Improve one part of your app",
+  "Write a few lines of code",
+  "Sketch a new project idea",
+  "Work on a DIY project for 15 minutes",
+  "Learn something about electronics",
+  "Document your latest project progress",
+  "Test one feature of your app",
+  "Organize your project files",
+  "Write down an idea for a future project",
+
+  // Evening routine
+  "Tidy up before bed",
+  "Brush your teeth before sleeping",
+  "Prepare clothes for tomorrow",
+  "Check tomorrow's schedule",
+  "Write down one thing that went well",
+  "Reflect on today's progress",
+  "Put your phone away before bedtime",
+  "Make sure your school bag is ready",
+  "Set your alarm",
+  "Get enough sleep"
 ];
+
 
 const BONUS_POOL=[
 "Clear your desk for five minutes","Read or learn something for ten minutes",
