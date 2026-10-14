@@ -1211,4 +1211,126 @@ button:active {
     font-size: .52rem;
   }
 }
-```
+
+/* =========================================
+   DAILYAPP — TOXIC GREEN / DEEP BLACK
+========================================= */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: dark !important;
+
+  --bg: #030503 !important;
+  --surface: #090d08 !important;
+  --surface-2: #10160b !important;
+
+  --text: #edffd9 !important;
+  --muted: #89977e !important;
+
+  --border: rgba(182, 255, 0, 0.14) !important;
+
+  /* Toxic neon green */
+  --accent: #b6ff00 !important;
+  --accent-rgb: 182, 255, 0 !important;
+  --accent-2: #70ff00 !important;
+
+  --danger: #ff5268 !important;
+
+  --shadow:
+    0 15px 40px rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Background */
+html,
+body {
+  background: #030503 !important;
+  color: #edffd9;
+}
+
+/* Cards: almost black */
+.panel,
+.stat-card,
+.task-card {
+  background: #090d08 !important;
+  border-color: rgba(182, 255, 0, 0.12) !important;
+}
+
+/* Main hero panel */
+.hero-card {
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(182, 255, 0, 0.12),
+      transparent 48%
+    ),
+    linear-gradient(135deg, #10160b, #050705) !important;
+
+  border-color: rgba(182, 255, 0, 0.2) !important;
+}
+
+/* Buttons */
+.primary-button {
+  background: #b6ff00 !important;
+  color: #050700 !important;
+  box-shadow: 0 0 16px rgba(182, 255, 0, 0.12);
+}
+
+.secondary-button {
+  background: #10160b !important;
+  border-color: rgba(182, 255, 0, 0.2) !important;
+  color: #edffd9 !important;
+}
+
+/* Progress bars */
+.progress-fill,
+.bar-fill {
+  background: linear-gradient(
+    90deg,
+    #70ff00,
+    #b6ff00
+  ) !important;
+  box-shadow: 0 0 12px rgba(182, 255, 0, 0.2);
+}
+
+/* Task checkboxes */
+.task-check {
+  border-color: #607046 !important;
+}
+
+.task-card.done .task-check {
+  background: #b6ff00 !important;
+  border-color: #b6ff00 !important;
+}
+
+/* Navigation */
+.bottom-nav {
+  background: rgba(3, 5, 3, 0.96) !important;
+  border-color: rgba(182, 255, 0, 0.14) !important;
+}
+
+.nav-item.active {
+  background: rgba(182, 255, 0, 0.09) !important;
+  color: #b6ff00 !important;
+}
+
+/* Green highlights */
+.topbar h1 span,
+.stat-icon,
+.task-xp,
+.text-button {
+  color: #b6ff00 !important;
+}
+
+/* Focus outlines */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline-color: #b6ff00 !important;
+}
+
+/* Subtle neon selection */
+::selection {
+  background: #b6ff00;
+  color: #030503;
+}
+
