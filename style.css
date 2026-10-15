@@ -1,3245 +1,1187 @@
+```css
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-/* ==========================================================
-   DailyApp 3.0 — Refined Green Edition
-   Minimal • Premium • Clear Cards • Yellow Coins
-   ========================================================== */
-
-/* ==================== 1. VARIABLES ==================== */
+/* =========================
+   DAILYAPP 2.2 — STYLE.CSS
+========================= */
 
 :root {
+  --bg: #080d1a;
+  --surface: #101b30;
+  --surface-2: #14223b;
+  --text: #edf4ff;
+  --muted: #91a2bc;
+  --border: rgba(154,180,220,.13);
+  --accent: #63e6b0;
+  --accent-rgb: 99,230,176;
+  --accent-2: #83c9ff;
+  --danger: #ff7088;
+  --shadow: 0 18px 45px rgba(0,0,0,.2);
   color-scheme: dark;
-
-  --bg: #080e09;
-  --surface: #101a12;
-  --surface-2: #142016;
-  --surface-3: #1b2a1e;
-  --surface-hover: #223326;
-
-  --text: #e2ecdf;
-  --muted: #91a18f;
-  --muted-2: #bacab7;
-
-  --border: rgba(137, 183, 126, 0.15);
-  --border-hover: rgba(154, 211, 137, 0.28);
-  --border-strong: rgba(154, 211, 137, 0.22);
-
-  /* Dynamische Accent-Farbe aus den App-Einstellungen */
-  --accent: #b6ff00;
-  --accent-bright: #caff45;
-  --accent-rgb: 182, 255, 0;
-
-  /* Coins behalten immer ihren gelben Farbton */
-  --coin-color: #f4ca58;
-  --coin-bright: #ffdc78;
-  --coin-rgb: 244, 202, 88;
-
-  --danger: #f07872;
-  --success: #73d69a;
-  --warning: #efc66f;
-
-  /* Kompatibilität mit bisherigen DailyApp-Styles */
-  --mint: var(--accent);
-  --blue: var(--accent);
-  --toxic: var(--accent);
-  --toxic-bright: var(--accent-bright);
-  --toxic-rgb: var(--accent-rgb);
-
-  --shadow-sm:
-    0 3px 10px rgba(0, 0, 0, 0.13),
-    inset 0 1px 0 rgba(190, 230, 180, 0.018);
-
-  --shadow-md:
-    0 8px 24px rgba(0, 0, 0, 0.19),
-    inset 0 1px 0 rgba(190, 230, 180, 0.025);
-
-  --shadow-lg:
-    0 18px 48px rgba(0, 0, 0, 0.30);
-
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 19px;
-  --radius-xl: 24px;
-
-  --content-width: 1180px;
-  --nav-height: 76px;
-
-  --transition-fast: 150ms ease;
-  --transition: 220ms ease;
-  --transition-slow: 320ms ease;
-
-  --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* ==================== 2. LIGHT THEME ==================== */
-
-html[data-theme="light"],
-html.light,
-body.light,
-body[data-theme="light"] {
+:root[data-theme="light"] {
+  --bg: #f3f6fb;
+  --surface: #fff;
+  --surface-2: #eaf0f8;
+  --text: #152139;
+  --muted: #64748b;
+  --border: rgba(35,54,85,.13);
+  --shadow: 0 14px 35px rgba(35,54,85,.08);
   color-scheme: light;
-
-  --bg: #edf3e9;
-  --surface: #f8fbf5;
-  --surface-2: #eff5eb;
-  --surface-3: #e4eddf;
-  --surface-hover: #dce8d6;
-
-  --text: #253326;
-  --muted: #71816e;
-  --muted-2: #52654f;
-
-  --border: rgba(55, 94, 47, 0.15);
-  --border-hover: rgba(55, 110, 45, 0.27);
-  --border-strong: rgba(55, 110, 45, 0.22);
-
-  --shadow-sm:
-    0 3px 10px rgba(38, 65, 32, 0.04);
-
-  --shadow-md:
-    0 8px 24px rgba(38, 65, 32, 0.065);
-
-  --shadow-lg:
-    0 18px 48px rgba(38, 65, 32, 0.12);
 }
 
-/* ==================== 3. RESET ==================== */
+:root[data-accent="mint"] {
+  --accent: #63e6b0;
+  --accent-rgb: 99,230,176;
+}
+
+:root[data-accent="blue"] {
+  --accent: #73b7ff;
+  --accent-rgb: 115,183,255;
+}
+
+:root[data-accent="purple"] {
+  --accent: #b69cff;
+  --accent-rgb: 182,156,255;
+}
+
+:root[data-accent="pink"] {
+  --accent: #ff8bc2;
+  --accent-rgb: 255,139,194;
+}
+
+:root[data-accent="orange"] {
+  --accent: #ffb86b;
+  --accent-rgb: 255,184,107;
+}
+
+:root[data-accent="red"] {
+  --accent: #ff7788;
+  --accent-rgb: 255,119,136;
+}
+
+:root[data-accent="cyan"] {
+  --accent: #5de2e7;
+  --accent-rgb: 93,226,231;
+}
+
+:root[data-accent="yellow"] {
+  --accent: #f1d66d;
+  --accent-rgb: 241,214,109;
+}
+
+:root[data-accent="lime"] {
+  --accent: #b7e66d;
+  --accent-rgb: 183,230,109;
+}
+
+:root[data-accent="white"] {
+  --accent: #d9e4f5;
+  --accent-rgb: 217,228,245;
+}
+
+/* GENERAL */
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  min-height: 100%;
   scroll-behavior: smooth;
-  scroll-padding-top: 90px;
-  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  min-height: 100vh;
   margin: 0;
-
-  background:
-    radial-gradient(
-      ellipse at 50% -18%,
-      rgba(47, 100, 53, 0.13),
-      transparent 58%
-    ),
-    var(--bg);
-
+  min-height: 100vh;
+  background: var(--bg);
   color: var(--text);
-  font-family: var(--font);
-  font-size: 14px;
-  line-height: 1.55;
-  letter-spacing: -0.01em;
-
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-
-  transition:
-    background-color var(--transition-slow),
-    color var(--transition);
-}
-
-body,
-button,
-input,
-select,
-textarea {
-  font-family: var(--font);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  transition: background .2s, color .2s;
 }
 
 button,
 input,
-select,
-textarea {
-  font-size: inherit;
+select {
+  font: inherit;
 }
 
 button {
-  color: inherit;
   cursor: pointer;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
-  transform: none !important;
-}
-
 button:focus-visible,
-a:focus-visible,
 input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-img,
-svg {
-  max-width: 100%;
-}
-
-::selection {
-  background: rgba(var(--accent-rgb), 0.23);
-  color: var(--text);
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2a3a2b;
-  border: 2px solid var(--bg);
-  border-radius: 20px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #405841;
-}
-
-/* ==================== 4. LAYOUT ==================== */
-
-.app,
 .app-shell {
-  width: min(100% - 36px, var(--content-width));
+  width: min(100%, 760px);
   min-height: 100vh;
-  margin-inline: auto;
-  padding-bottom: calc(var(--nav-height) + 36px);
+  margin: 0 auto;
+  padding:
+    env(safe-area-inset-top)
+    18px
+    calc(100px + env(safe-area-inset-bottom));
 }
 
-main,
-.main-content,
-.content {
-  width: 100%;
-  min-width: 0;
+h2,
+h3,
+p {
+  margin-top: 0;
 }
+
+h2 {
+  margin-bottom: 8px;
+  font: 700 1.55rem 'Space Grotesk', sans-serif;
+  letter-spacing: -.045em;
+}
+
+h3 {
+  margin-bottom: 12px;
+  font: 600 1rem 'Space Grotesk', sans-serif;
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: .67rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.tiny {
+  font-size: .68rem;
+}
+
+/* HEADER & NAVIGATION */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 2px 25px;
+}
+
+.topbar h1 {
+  margin: 3px 0 0;
+  font: 700 1.8rem 'Space Grotesk', sans-serif;
+  letter-spacing: -.06em;
+}
+
+.topbar h1 span {
+  color: var(--accent);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 1.6rem;
+  box-shadow: var(--shadow);
+}
+
+.icon-button.small {
+  width: 36px;
+  height: 36px;
+  font-size: 1.5rem;
+  box-shadow: none;
+}
+
+.bottom-nav {
+  position: fixed;
+  z-index: 10;
+  bottom: 0;
+  left: 50%;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 2px;
+  width: min(100%, 760px);
+  padding: 9px 8px calc(9px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(20px);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 1px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.nav-item > span {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.nav-item small {
+  font-size: .59rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.nav-item.active {
+  background: rgba(var(--accent-rgb),.1);
+  color: var(--accent);
+}
+
+.nav-item.active > span {
+  filter: drop-shadow(0 0 7px rgba(var(--accent-rgb),.4));
+}
+
+/* PAGE SWITCHING */
 
 .view {
   display: none;
-  min-width: 0;
-  padding-top: 22px;
-  padding-bottom: 24px;
+  animation: fadein .18s ease;
 }
 
 .view.active {
   display: block;
-  animation: dailyViewEnter 240ms ease both;
 }
 
-@keyframes dailyViewEnter {
+@keyframes fadein {
   from {
-    opacity: 0;
+    opacity: .35;
     transform: translateY(4px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.view > * + * {
-  margin-top: 18px;
+.page-heading {
+  padding: 2px 0 22px;
 }
 
-section,
-article {
-  min-width: 0;
-}
-
-/* ==================== 5. TYPOGRAPHY ==================== */
-
-h1,
-h2,
-h3,
-h4,
-p {
-  overflow-wrap: anywhere;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  color: var(--text);
-  font-weight: 650;
-  letter-spacing: -0.04em;
-  line-height: 1.23;
-}
-
-h1 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: clamp(27px, 4vw, 37px);
-}
-
-h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-size: clamp(20px, 3vw, 25px);
-}
-
-h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-h4 {
-  margin-top: 0;
-  margin-bottom: 7px;
-  font-size: 14px;
-}
-
-p {
+.page-heading p:last-child {
+  margin-bottom: 0;
   color: var(--muted);
+  font-size: .9rem;
 }
 
-small,
-.small,
-.muted {
-  color: var(--muted);
-  font-size: 12px;
-}
+/* HOME & HERO CARD */
 
-strong,
-b {
-  font-weight: 650;
-}
-
-.page-title,
-.section-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.page-title p,
-.section-title p {
-  margin: 4px 0 0;
-}
-
-.eyebrow,
-.kicker,
-.overline {
-  display: block;
-  margin-bottom: 7px;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* ==================== 6. HEADER ==================== */
-
-.topbar {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 76px;
-  padding: 15px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.topbar h1,
-.topbar h2,
-.topbar p {
-  margin: 0;
-}
-
-.topbar h1,
-.topbar .brand {
-  font-size: 20px;
-  font-weight: 750;
-  letter-spacing: -0.05em;
-}
-
-.topbar p {
-  margin-top: 3px;
-  font-size: 12px;
-}
-
-.topbar-actions,
-.header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 9px;
-  flex-wrap: wrap;
-}
-
-.level-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 7px 12px;
-  border: 1px solid rgba(var(--accent-rgb), 0.22);
-  border-radius: 999px;
-  background: rgba(var(--accent-rgb), 0.09);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-/* ==================== 7. CARDS ==================== */
-
-/*
-   Cards have more contrast than the previous version.
-   Green-tinted borders separate them from the page.
-*/
-
-.card,
-.panel,
-.stat-card,
-.task-card,
-.calendar-card,
-.level-card,
-.settings-card,
-.achievement-card,
-.shop-card,
-.analytics-card {
-  min-width: 0;
+.hero-card {
+  margin-bottom: 15px;
+  padding: 22px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-
-  transition:
-    border-color var(--transition),
-    background-color var(--transition),
-    box-shadow var(--transition),
-    transform var(--transition);
+  border-radius: 25px;
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(var(--accent-rgb),.17),
+      transparent 45%
+    ),
+    linear-gradient(135deg, var(--surface-2), var(--surface));
+  box-shadow: var(--shadow);
 }
 
-.card,
-.panel,
-.settings-card {
-  padding: 20px;
-}
-
-.card:hover,
-.panel:hover,
-.settings-card:hover,
-.stat-card:hover,
-.achievement-card:hover,
-.shop-card:hover {
-  border-color: var(--border-hover);
-}
-
-.card-header,
-.panel-header,
-.card-heading {
+.hero-top {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.hero-top > span:last-child {
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.pill {
+  display: inline-flex;
+  padding: 6px 9px;
+  border-radius: 100px;
+  background: rgba(var(--accent-rgb),.1);
+  color: var(--accent);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.hero-card h2 {
+  max-width: 390px;
+}
+
+.hero-card > p {
+  margin-bottom: 23px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(128,150,180,.16);
+}
+
+.progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width .35s;
+}
+
+.progress-meta {
+  display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-top: 10px;
+  font-size: .76rem;
 }
 
-.card-header h2,
-.card-header h3,
-.panel-header h2,
-.panel-header h3,
-.card-heading h2,
-.card-heading h3 {
-  margin-bottom: 0;
+.progress-meta span {
+  color: var(--muted);
 }
 
-.card-header p,
-.panel-header p {
-  margin: 4px 0 0;
-}
-
-.card-grid,
-.cards-grid {
+.stat-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
+  margin-bottom: 27px;
 }
 
-.grid,
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 13px;
+.stat-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
-.empty-state {
-  padding: 26px 16px;
-  border: 1px dashed var(--border-hover);
-  border-radius: var(--radius-md);
-  background: rgba(34, 55, 35, 0.12);
-  color: var(--muted);
-  font-size: 13px;
-  text-align: center;
-}
-
-/* ==================== 8. DASHBOARD ==================== */
-
-.hero,
-.hero-card,
-.command-hero {
-  position: relative;
-  overflow: hidden;
-  padding: clamp(22px, 4vw, 34px);
-
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xl);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(41, 83, 43, 0.23),
-      rgba(15, 28, 17, 0.12) 70%
-    ),
-    var(--surface);
-
-  box-shadow: var(--shadow-md);
-}
-
-.hero::after,
-.hero-card::after,
-.command-hero::after {
-  position: absolute;
-  top: -65px;
-  right: -65px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-
-  background: radial-gradient(
-    circle,
-    rgba(var(--accent-rgb), 0.065),
-    transparent 70%
-  );
-
-  content: "";
-  pointer-events: none;
-}
-
-.hero > *,
-.hero-card > *,
-.command-hero > * {
-  position: relative;
-  z-index: 1;
-}
-
-.hero h1,
-.hero-card h1,
-.command-hero h1 {
-  max-width: 760px;
-  margin-bottom: 9px;
-  font-size: clamp(27px, 4.5vw, 40px);
-}
-
-.hero p,
-.hero-card p,
-.command-hero p {
-  max-width: 620px;
-  margin: 0;
-  line-height: 1.7;
-}
-
-.quick-actions {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 20px;
-}
-
-/* ==================== 9. BUTTONS ==================== */
-
-.btn,
-.button,
-.primary-button,
-.secondary-button,
-.achievement-claim,
-.shop-buy {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  min-height: 39px;
-  padding: 9px 15px;
-
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--text);
-
-  font-size: 12px;
-  font-weight: 650;
-  text-align: center;
-  text-decoration: none;
-
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.btn:hover,
-.button:hover,
-.secondary-button:hover {
-  border-color: var(--border-hover);
-  background: var(--surface-3);
-}
-
-.btn:active,
-.button:active,
-.primary-button:active,
-.secondary-button:active,
-.shop-buy:active {
-  transform: scale(0.98);
-}
-
-.btn-primary,
-.primary-button,
-button.primary,
-button[type="submit"],
-.shop-buy,
-.achievement-claim {
-  border-color: transparent;
-  background: var(--accent);
-  color: #15200f;
-  font-weight: 750;
-}
-
-.btn-primary:hover,
-.primary-button:hover,
-button.primary:hover,
-button[type="submit"]:hover,
-.shop-buy:hover,
-.achievement-claim:hover {
-  background: var(--accent-bright);
-  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.12);
-}
-
-.btn-ghost,
-.ghost-button {
-  border-color: transparent;
-  background: transparent;
-}
-
-.btn-danger,
-.danger-button {
-  border-color: rgba(240, 120, 114, 0.23);
-  background: rgba(240, 120, 114, 0.08);
-  color: var(--danger);
-}
-
-.icon-button,
-.delete-task,
-.close-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 35px;
-  min-width: 35px;
-  height: 35px;
-  padding: 0;
-
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--muted);
-
-  transition: all var(--transition-fast);
-}
-
-.icon-button:hover,
-.delete-task:hover,
-.close-button:hover {
-  border-color: rgba(240, 120, 114, 0.27);
-  background: rgba(240, 120, 114, 0.08);
-  color: var(--danger);
-}
-
-/* ==================== 10. STATS ==================== */
 
 .stat-card {
-  position: relative;
-  overflow: hidden;
-  padding: 17px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(38, 65, 39, 0.10),
-      transparent 65%
-    ),
-    var(--surface);
-}
-
-.stat-card .stat-label,
-.stat-label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 550;
-}
-
-.stat-card .stat-value,
-.stat-value {
-  display: block;
-  color: var(--text);
-  font-size: clamp(23px, 3vw, 31px);
-  font-weight: 750;
-  letter-spacing: -0.055em;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.stat-card .stat-description,
-.stat-description {
-  display: block;
-  margin-top: 7px;
-  color: var(--muted);
-  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  background: var(--surface);
 }
 
 .stat-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 35px;
-  height: 35px;
-  margin-bottom: 13px;
-
-  border: 1px solid rgba(var(--accent-rgb), 0.11);
-  border-radius: 11px;
-  background: rgba(var(--accent-rgb), 0.075);
   color: var(--accent);
+  font-size: 1.15rem;
 }
 
-/* ==================== 11. XP AND COINS ==================== */
+.stat-label {
+  color: var(--muted);
+  font-size: .73rem;
+}
 
-/* XP follows the currently selected Accent-Farbe. */
-#home-xp,
-#progress-level,
-.xp-value {
+.stat-card strong {
+  overflow-wrap: anywhere;
+  font: 700 1.45rem 'Space Grotesk', sans-serif;
+}
+
+.stat-card small {
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 28px 0 13px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.section-heading h3 {
+  margin-bottom: 0;
+}
+
+.text-button {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
   color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-/*
-   Coin balances always remain yellow.
-   This does not depend on the chosen accent color.
-*/
-
-#home-coins,
-#shop-coins,
-#progress-coins,
-#progress-earned-coins,
-#analytics-coins,
-.coin,
-.coins,
-.coin-value,
-.coin-amount,
-.wallet-balance {
-  color: var(--coin-color);
-  font-variant-numeric: tabular-nums;
-}
-
-/* An extra safeguard for coin values inside the shop. */
-.shop-reward-action strong {
-  color: var(--coin-color);
-}
-
-#shop-history .history-row > span {
-  color: var(--coin-color);
+  font-size: .8rem;
   font-weight: 700;
 }
 
-.wallet-card .wallet-balance,
-.coin-wallet .wallet-balance {
-  color: var(--coin-color);
+.panel {
+  min-width: 0;
+  margin-bottom: 13px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 21px;
+  background: var(--surface);
 }
 
-.coin-icon,
-.coins-icon {
-  color: var(--coin-color);
-}
-
-/* ==================== 12. PROGRESS BARS ==================== */
-
-.progress,
-.progress-track,
-.xp-track,
-.level-progress,
-.daily-progress {
-  position: relative;
-  overflow: hidden;
-
-  width: 100%;
-  height: 7px;
-
-  border: 1px solid rgba(140, 183, 129, 0.07);
-  border-radius: 999px;
-  background: #223126;
-}
-
-.progress-fill,
-.progress-bar,
-.xp-fill,
-.level-progress-fill,
-#daily-progress-fill,
-#level-progress-fill {
-  display: block;
-  width: 0;
-  height: 100%;
-
-  border-radius: inherit;
-  background: var(--accent);
-
-  box-shadow: 0 0 9px rgba(var(--accent-rgb), 0.10);
-
-  transition:
-    width 500ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.progress-labels,
-.progress-meta,
-.level-progress-meta {
+.focus-note {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-
-  margin-bottom: 9px;
-
-  color: var(--muted);
-  font-size: 11px;
+  gap: 14px;
 }
 
-.progress-labels strong,
-.progress-meta strong {
+.focus-note p {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* BUTTONS */
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  padding: 12px 15px;
+  border: 0;
+  border-radius: 13px;
+  font-size: .83rem;
+  font-weight: 700;
+  transition: transform .15s, opacity .15s;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #07130f;
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   color: var(--text);
 }
 
-/* ==================== 13. LEVEL CARD ==================== */
-
-.level-card {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-  padding: 20px;
-
-  background:
-    linear-gradient(
-      120deg,
-      rgba(36, 63, 37, 0.15),
-      transparent 75%
-    ),
-    var(--surface);
+.danger-button {
+  border: 1px solid rgba(255,112,136,.2);
+  background: rgba(255,112,136,.12);
+  color: var(--danger);
 }
 
-.level-orb,
-#level-orb {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-
-  width: 62px;
-  height: 62px;
-
-  border: 1px solid rgba(var(--accent-rgb), 0.27);
-  border-radius: 50%;
-  background: rgba(var(--accent-rgb), 0.085);
-  color: var(--accent);
-
-  font-size: 22px;
-  font-weight: 800;
-
-  box-shadow: 0 0 22px rgba(var(--accent-rgb), 0.045);
+button:active {
+  transform: scale(.98);
 }
 
-.level-copy {
+button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+/* TASKS */
+
+.task-form {
+  display: grid;
+  gap: 10px;
+}
+
+.task-form label,
+.settings-group > label {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 600;
+}
+
+.task-form input,
+.settings-group input,
+.settings-group select,
+.task-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.form-row {
+  display: flex;
+  gap: 9px;
+}
+
+.form-row > * {
   flex: 1;
   min-width: 0;
 }
 
-.level-copy h2,
-.level-copy h3,
-.level-copy p {
-  margin-top: 0;
-}
-
-.level-copy p {
-  margin-bottom: 10px;
-}
-
-/* ==================== 14. TASKS ==================== */
-
-.task-list,
-#task-list,
-.tasks-list {
+.filter-row {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 17px 0;
+}
+
+.filter-chip {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.filter-chip.active {
+  border-color: rgba(var(--accent-rgb),.35);
+  background: rgba(var(--accent-rgb),.13);
+  color: var(--accent);
+}
+
+.task-list {
+  display: grid;
   gap: 9px;
 }
 
-.task-card,
-.task-item,
-.task-row {
+.task-card {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 15px;
-
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
   background: var(--surface);
-  border-color: var(--border);
 }
 
-.task-card:hover,
-.task-item:hover,
-.task-row:hover {
-  border-color: var(--border-hover);
-  background: #132017;
+.task-check {
+  display: grid;
+  flex: 0 0 25px;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1.5px solid var(--muted);
+  border-radius: 8px;
+  background: transparent;
+  color: #06150f;
+  font-weight: 900;
 }
 
-.task-card.completed,
-.task-item.completed,
-.task-row.completed,
-.task-card.is-complete {
-  opacity: 0.65;
+.task-card.done .task-check {
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
-.task-card.completed .task-title,
-.task-item.completed .task-title,
-.task-row.completed .task-title {
-  color: var(--muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--muted);
-}
-
-.task-checkbox,
-.task-check,
-.task-card input[type="checkbox"],
-.task-item input[type="checkbox"] {
-  flex-shrink: 0;
-  width: 19px;
-  height: 19px;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.task-copy,
-.task-content,
-.task-details {
+.task-copy {
   flex: 1;
   min-width: 0;
 }
 
 .task-title {
-  display: block;
-  margin: 0;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 650;
   overflow-wrap: anywhere;
-}
-
-.task-description {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.task-meta,
-.task-tags,
-.task-footer {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-  margin-top: 7px;
-}
-
-.task-category,
-.category-tag,
-.task-priority,
-.badge,
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  max-width: 100%;
-  padding: 4px 8px;
-
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--surface-2);
-  color: var(--muted-2);
-
-  font-size: 10px;
+  font-size: .88rem;
   font-weight: 600;
 }
 
-.task-xp,
-.xp-badge {
+.task-card.done .task-title {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.task-sub {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.task-xp {
   color: var(--accent);
-  font-size: 11px;
+  font-size: .72rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
-.task-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.task-actions button {
-  flex-shrink: 0;
-}
-
-.add-task,
-.task-form,
-#task-form {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-wrap: wrap;
-}
-
-.add-task input,
-.task-form input,
-#task-form input,
-#task-input {
-  flex: 1;
-  min-width: 120px;
-}
-
-.filter-row,
-.task-filters {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-  margin-bottom: 15px;
-}
-
-.filter-row button,
-.task-filters button,
-.filter-button {
-  min-height: 32px;
-  padding: 6px 11px;
-
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
+.delete-task {
+  padding: 5px;
+  border: 0;
+  background: transparent;
   color: var(--muted);
-
-  font-size: 11px;
-  font-weight: 600;
-
-  transition: all var(--transition-fast);
+  font-size: 1.1rem;
 }
 
-.filter-row button:hover,
-.task-filters button:hover,
-.filter-button:hover,
-.filter-row button.active,
-.task-filters button.active,
-.filter-button.active {
-  border-color: rgba(var(--accent-rgb), 0.28);
-  background: rgba(var(--accent-rgb), 0.085);
-  color: var(--accent);
-}
-
-/* ==================== 15. INPUTS ==================== */
-
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-select,
-textarea {
-  width: 100%;
-  min-height: 41px;
-  padding: 10px 12px;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #101b12;
-  color: var(--text);
-
-  transition:
-    border-color var(--transition-fast),
-    background-color var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #7e907d;
-  opacity: 1;
-}
-
-input:hover,
-select:hover,
-textarea:hover {
-  border-color: var(--border-hover);
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: rgba(var(--accent-rgb), 0.58);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.075);
-}
-
-input[type="checkbox"],
-input[type="radio"],
-input[type="range"] {
-  accent-color: var(--accent);
-}
-
-label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--muted-2);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.form-group,
-.field,
-.input-group {
-  min-width: 0;
-  margin-bottom: 14px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-/* ==================== 16. CATEGORIES ==================== */
-
-.category-list,
-#category-list,
-.categories-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.category-item,
-.category-row,
-.category-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
-
-.category-name {
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.category-xp {
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.category-actions {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-/* ==================== 17. CALENDAR ==================== */
-
-.calendar-card {
-  overflow: hidden;
-  padding: 18px;
-}
-
-.calendar-header,
-.calendar-top,
-.calendar-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 17px;
-}
-
-.calendar-header h2,
-.calendar-top h2,
-.calendar-controls h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.calendar-grid,
-.calendar-days,
-#calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.calendar-weekday,
-.calendar-day-label {
-  padding: 7px 0;
+.empty-state {
+  padding: 25px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 17px;
   color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: .85rem;
   text-align: center;
 }
 
-.calendar-day,
-.calendar-date {
-  position: relative;
+/* CALENDAR */
+
+.calendar-panel {
+  padding: 15px;
+}
+
+.calendar-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
 
-  min-width: 0;
-  min-height: 43px;
-  padding: 5px;
+.calendar-header h3 {
+  margin: 0;
+}
 
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.calendar-weekdays {
+  margin-bottom: 8px;
+}
+
+.calendar-weekdays span {
+  padding: 6px 0;
+  color: var(--muted);
+  font-size: .7rem;
+  text-align: center;
+}
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
   border: 1px solid transparent;
-  border-radius: 10px;
-  background: var(--surface-2);
+  border-radius: 11px;
+  background: transparent;
   color: var(--text);
-
-  font-size: 12px;
-
-  transition: all var(--transition-fast);
+  font-size: .82rem;
 }
 
-.calendar-day:hover,
-.calendar-date:hover {
-  border-color: var(--border-hover);
-  background: var(--surface-3);
+.calendar-day.muted-day {
+  color: var(--muted);
+  opacity: .38;
 }
 
-.calendar-day.today,
-.calendar-date.today {
-  border-color: rgba(var(--accent-rgb), 0.45);
-  color: var(--accent);
-  font-weight: 750;
-}
-
-.calendar-day.selected,
-.calendar-date.selected,
-.calendar-day.active,
-.calendar-date.active {
+.calendar-day.today {
   border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.12);
-  color: var(--accent);
 }
 
-.calendar-day.other-month,
-.calendar-date.other-month {
-  opacity: 0.35;
+.calendar-day.selected {
+  background: var(--accent);
+  color: #07130f;
+  font-weight: 800;
 }
 
-.calendar-day.has-tasks::after,
-.calendar-date.has-tasks::after {
+.calendar-day.has-activity:not(.selected)::after {
   position: absolute;
   bottom: 4px;
-  left: 50%;
-
+  left: calc(50% - 2px);
   width: 4px;
   height: 4px;
-
   border-radius: 50%;
   background: var(--accent);
   content: "";
-
-  transform: translateX(-50%);
 }
 
-.calendar-day.completed,
-.calendar-date.completed {
-  background: rgba(var(--accent-rgb), 0.075);
+/* ACTIVITY HEATMAP */
+
+.heatmap-panel {
+  overflow: hidden;
 }
 
-.calendar-events,
-.calendar-agenda {
-  margin-top: 18px;
+.heatmap-months {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  padding-left: 27px;
+  color: var(--muted);
+  font-size: .62rem;
 }
 
-/* ==================== 18. HEATMAP ==================== */
+.heatmap-months span {
+  flex: 1;
+}
 
-.heatmap,
-#heatmap,
+.heatmap-layout {
+  display: flex;
+  gap: 7px;
+}
+
+.heatmap-weekdays {
+  display: flex;
+  flex: 0 0 20px;
+  flex-direction: column;
+  justify-content: space-around;
+  color: var(--muted);
+  font-size: .57rem;
+}
+
 .heatmap-grid {
   display: grid;
+  flex: 1;
   grid-auto-flow: column;
-  grid-template-rows: repeat(7, minmax(0, 1fr));
+  grid-auto-columns: minmax(7px, 1fr);
+  grid-template-rows: repeat(7, 11px);
   gap: 4px;
-
-  width: 100%;
-  overflow-x: auto;
-  padding: 5px 0;
+  overflow: hidden;
 }
 
-.heatmap-cell {
-  width: 100%;
-  min-width: 9px;
-  aspect-ratio: 1;
-
-  border: 1px solid var(--border);
+.heat-cell {
+  min-width: 0;
+  min-height: 0;
   border-radius: 3px;
   background: var(--surface-2);
 }
 
-.heatmap-cell[data-level="1"],
-.heatmap-cell.level-1 {
-  background: rgba(var(--accent-rgb), 0.2);
+.heat-0 {
+  background: var(--surface-2);
 }
 
-.heatmap-cell[data-level="2"],
-.heatmap-cell.level-2 {
-  background: rgba(var(--accent-rgb), 0.4);
+.heat-1 {
+  background: rgba(var(--accent-rgb),.25);
 }
 
-.heatmap-cell[data-level="3"],
-.heatmap-cell.level-3 {
-  background: rgba(var(--accent-rgb), 0.65);
+.heat-2 {
+  background: rgba(var(--accent-rgb),.45);
 }
 
-.heatmap-cell[data-level="4"],
-.heatmap-cell.level-4 {
-  border-color: transparent;
+.heat-3 {
+  background: rgba(var(--accent-rgb),.7);
+}
+
+.heat-4 {
   background: var(--accent);
 }
 
-/* ==================== 19. ACHIEVEMENTS ==================== */
-
-.achievement-list,
-#achievement-list {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.achievement-card {
+.heatmap-legend {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 14px;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: .62rem;
 }
 
-.achievement-card.locked {
-  opacity: 0.63;
+.heatmap-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
 }
 
-.achievement-card.unlocked {
-  border-color: rgba(var(--accent-rgb), 0.21);
+/* PROGRESS & ACHIEVEMENTS */
+
+.level-card {
   background:
-    linear-gradient(
-      110deg,
-      rgba(37, 69, 38, 0.11),
-      transparent 80%
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(var(--accent-rgb),.2),
+      transparent 38%
     ),
     var(--surface);
+}
+
+.level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 23px;
+}
+
+.level-row h2 {
+  margin: 8px 0 2px;
+  font-size: 1.7rem;
+}
+
+.level-row p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.level-orb {
+  display: grid;
+  place-items: center;
+  width: 65px;
+  height: 65px;
+  border: 1px solid rgba(var(--accent-rgb),.35);
+  border-radius: 22px;
+  background: rgba(var(--accent-rgb),.12);
+  color: var(--accent);
+  font: 700 1.7rem 'Space Grotesk', sans-serif;
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.achievement {
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface);
+  opacity: .48;
+}
+
+.achievement.unlocked {
+  border-color: rgba(var(--accent-rgb),.35);
+  opacity: 1;
 }
 
 .achievement-icon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-
-  width: 43px;
-  height: 43px;
-
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  background: var(--surface-3);
-
-  font-size: 20px;
+  font-size: 1.35rem;
 }
 
-.achievement-copy {
-  flex: 1;
-  min-width: 0;
+.achievement h3 {
+  margin: 8px 0 4px;
+  font-size: .85rem;
 }
 
-.achievement-copy strong {
-  display: block;
-  font-size: 12px;
-}
-
-.achievement-copy small {
-  display: block;
-  margin-top: 3px;
-  line-height: 1.5;
-}
-
-.achievement-claim {
-  min-height: 32px;
-  padding: 7px 10px;
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-.achievement-lock {
+.achievement p {
+  margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: .7rem;
+  line-height: 1.45;
 }
 
-/* ==================== 20. ANALYTICS ==================== */
-
-.analytics-grid,
-.analytics-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.analytics-category-list,
-#analytics-category-list {
+.weekly-row {
   display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.analytics-category {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .82rem;
 }
 
-.analytics-category span {
-  color: var(--muted-2);
-  font-size: 12px;
+.weekly-row span {
+  color: var(--muted);
 }
 
-.analytics-category strong {
-  color: var(--text);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+.weekly-row:last-child {
+  border: 0;
 }
 
-/* ==================== 21. FOCUS TIMER ==================== */
+/* FOCUS TIMER */
 
-.timer-card,
-.focus-card {
-  padding: clamp(22px, 4vw, 36px);
+.timer-panel {
   text-align: center;
 }
 
-.timer-display,
-#timer-display {
-  margin: 18px 0;
-  color: var(--text);
-
-  font-size: clamp(44px, 9vw, 76px);
-  font-weight: 750;
-  letter-spacing: -0.075em;
-  line-height: 1;
-
+.timer-display {
+  margin: 12px 0;
+  font: 700 clamp(3rem, 15vw, 4.2rem) 'Space Grotesk', sans-serif;
+  letter-spacing: -.06em;
   font-variant-numeric: tabular-nums;
 }
 
-.timer-controls {
+.timer-presets,
+.button-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
-.timer-modes,
-.timer-mode-options {
+.button-row {
+  margin-top: 15px;
+}
+
+.button-row > * {
+  min-width: 100px;
+}
+
+.timer-panel > .muted {
+  margin-bottom: 0;
+}
+
+/* ANALYTICS & CHARTS */
+
+.chart-panel {
+  padding: 18px 14px;
+}
+
+.bar-chart {
   display: flex;
-  justify-content: center;
+  align-items: stretch;
   gap: 7px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+  height: 150px;
+  padding-top: 12px;
 }
 
-.timer-modes button,
-.timer-mode-options button {
-  padding: 7px 12px;
-
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface-2);
-  color: var(--muted);
-
-  font-size: 11px;
-}
-
-.timer-modes button.active,
-.timer-mode-options button.active {
-  border-color: rgba(var(--accent-rgb), 0.3);
-  background: rgba(var(--accent-rgb), 0.09);
-  color: var(--accent);
-}
-
-/* ==================== 22. SHOP AND WALLET ==================== */
-
-.wallet-card,
-.coin-wallet {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 20px;
-
-  border: 1px solid rgba(244, 202, 88, 0.19);
-  border-radius: var(--radius-lg);
-
-  background:
-    linear-gradient(
-      125deg,
-      rgba(74, 64, 31, 0.17),
-      transparent 72%
-    ),
-    var(--surface);
-}
-
-.wallet-card .wallet-label,
-.coin-wallet .wallet-label {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.wallet-card .wallet-balance,
-.coin-wallet .wallet-balance {
-  display: block;
-  margin-top: 4px;
-
-  color: var(--coin-color);
-  font-size: clamp(27px, 4vw, 36px);
-  font-weight: 800;
-  letter-spacing: -0.06em;
-  font-variant-numeric: tabular-nums;
-}
-
-.shop-rewards,
-#shop-rewards,
-.shop-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.shop-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  padding: 16px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(36, 59, 37, 0.10),
-      transparent 72%
-    ),
-    var(--surface);
-}
-
-.shop-reward-icon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-
-  width: 44px;
-  height: 44px;
-
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  background: var(--surface-3);
-
-  font-size: 21px;
-}
-
-.shop-reward-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.shop-reward-copy h3 {
-  margin-bottom: 5px;
-  font-size: 14px;
-}
-
-.shop-reward-copy p {
-  margin: 0 0 8px;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.shop-reward-copy small {
-  display: block;
-  line-height: 1.5;
-}
-
-.shop-reward-action {
-  display: flex;
-  flex-shrink: 0;
-  align-items: flex-end;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.shop-reward-action strong {
-  color: var(--coin-color);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.shop-buy {
-  min-height: 33px;
-  padding: 7px 10px;
-  font-size: 11px;
-}
-
-.shop-history,
-#shop-history {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.history-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-}
-
-.history-row > div {
-  min-width: 0;
-}
-
-.history-row strong {
-  display: block;
-  font-size: 12px;
-}
-
-.history-row small {
-  display: block;
-  margin-top: 3px;
-  font-size: 11px;
-}
-
-.history-row > span {
-  flex-shrink: 0;
-  color: var(--coin-color);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-/* ==================== 23. SETTINGS ==================== */
-
-.settings-group,
-.settings-section {
-  margin-bottom: 18px;
-  padding: 19px;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-}
-
-.settings-group h2,
-.settings-group h3,
-.settings-section h2,
-.settings-section h3 {
-  margin-bottom: 6px;
-}
-
-.settings-group > p,
-.settings-section > p {
-  margin-top: 0;
-  font-size: 12px;
-}
-
-.setting-row,
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.setting-row:last-child,
-.settings-row:last-child {
-  border-bottom: 0;
-}
-
-.setting-copy,
-.settings-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.setting-copy strong,
-.settings-copy strong {
-  display: block;
-  font-size: 12px;
-}
-
-.setting-copy small,
-.settings-copy small {
-  display: block;
-  margin-top: 4px;
-  line-height: 1.5;
-}
-
-.setting-row select,
-.settings-row select {
-  width: auto;
-  min-width: 120px;
-  max-width: 48%;
-}
-
-.accent-options,
-#accent-options,
-.accent-picker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.accent-swatch,
-.accent-option,
-#accent-options button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 35px;
-  min-width: 35px;
-  height: 35px;
-  padding: 0;
-
-  border: 2px solid transparent;
-  border-radius: 50%;
-  background: var(--swatch, var(--accent));
-
-  cursor: pointer;
-
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.accent-swatch:hover,
-.accent-option:hover,
-#accent-options button:hover {
-  transform: scale(1.06);
-}
-
-.accent-swatch.active,
-.accent-swatch.selected,
-.accent-option.active,
-.accent-option.selected,
-#accent-options button.active,
-#accent-options button[aria-pressed="true"] {
-  border-color: var(--text);
-  box-shadow:
-    0 0 0 3px var(--surface),
-    0 0 0 5px var(--accent);
-}
-
-input[type="checkbox"].toggle,
-.toggle input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-}
-
-/* ==================== 24. NAVIGATION ==================== */
-
-.bottom-nav {
-  position: fixed;
-  z-index: 50;
-  right: 0;
-  bottom: 0;
-  left: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-
-  min-height: var(--nav-height);
-  padding: 9px 12px max(9px, env(safe-area-inset-bottom));
-
-  border-top: 1px solid rgba(137, 183, 126, 0.18);
-
-  background: rgba(9, 17, 10, 0.94);
-
-  backdrop-filter: blur(18px) saturate(135%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
-}
-
-html[data-theme="light"] .bottom-nav,
-html.light .bottom-nav,
-body.light .bottom-nav,
-body[data-theme="light"] .bottom-nav {
-  background: rgba(237, 243, 233, 0.94);
-}
-
-.bottom-nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: min(100%, var(--content-width));
-}
-
-.nav-item {
-  position: relative;
+.bar-col {
   display: flex;
   flex: 1;
-  align-items: center;
-  justify-content: center;
   flex-direction: column;
-  gap: 4px;
-
-  min-width: 0;
-  max-width: 100px;
-  min-height: 48px;
-  padding: 7px 5px;
-
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--muted);
-
-  font-size: 10px;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.nav-item svg,
-.nav-item .icon {
-  width: 18px;
-  height: 18px;
-  font-size: 17px;
-}
-
-.nav-item:hover {
-  background: rgba(38, 61, 39, 0.24);
-  color: var(--text);
-}
-
-.nav-item.active,
-.nav-item[aria-current="page"] {
-  border-color: rgba(var(--accent-rgb), 0.16);
-  background: rgba(var(--accent-rgb), 0.075);
-  color: var(--accent);
-}
-
-.nav-item.active::before {
-  position: absolute;
-  top: -1px;
-  left: 50%;
-
-  width: 18px;
-  height: 2px;
-
-  border-radius: 99px;
-  background: var(--accent);
-  content: "";
-
-  transform: translateX(-50%);
-}
-
-/* ==================== 25. TOAST ==================== */
-
-.toast,
-#toast {
-  position: fixed;
-  z-index: 10001;
-
-  right: 20px;
-  bottom: calc(var(--nav-height) + 16px);
-  left: 20px;
-
-  width: fit-content;
-  max-width: min(440px, calc(100% - 40px));
-  margin-inline: auto;
-  padding: 12px 17px;
-
-  border: 1px solid var(--border-hover);
-  border-radius: 13px;
-  background: #1b2a1e;
-  color: var(--text);
-
-  box-shadow: var(--shadow-lg);
-
-  font-size: 12px;
-  font-weight: 550;
-  line-height: 1.5;
-
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px);
-
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
-}
-
-.toast.show,
-#toast.show,
-.toast.visible,
-#toast.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ==================== 26. TABLES AND LISTS ==================== */
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-th,
-td {
-  padding: 11px 12px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-
-th {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-td {
-  color: var(--text);
-}
-
-ul,
-ol {
-  padding-left: 22px;
-}
-
-li + li {
-  margin-top: 5px;
-}
-
-/* ==================== 27. MODALS ==================== */
-
-.modal,
-.dialog,
-.confirmation-modal {
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-lg);
-}
-
-.modal-overlay,
-.dialog-overlay {
-  position: fixed;
-  z-index: 10000;
-  inset: 0;
-
-  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
-
-  background: rgba(3, 8, 4, 0.72);
-
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.modal-content,
-.dialog-content {
-  width: min(100%, 460px);
-  max-height: min(85vh, 720px);
-  overflow-y: auto;
-  padding: 24px;
-
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-xl);
-  background: var(--surface);
-
-  box-shadow: var(--shadow-lg);
-}
-
-.modal-actions,
-.dialog-actions {
-  display: flex;
   justify-content: flex-end;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 20px;
+  gap: 7px;
+  min-width: 0;
 }
 
-/* ==================== 28. UTILITIES ==================== */
-
-.text-accent {
-  color: var(--accent) !important;
+.bar-value {
+  color: var(--muted);
+  font-size: .62rem;
 }
 
-.text-coin {
-  color: var(--coin-color) !important;
+.bar-track {
+  display: flex;
+  align-items: flex-end;
+  width: min(100%, 27px);
+  height: 100px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--surface-2);
 }
 
-.text-muted {
-  color: var(--muted) !important;
+.bar-fill {
+  width: 100%;
+  min-height: 0;
+  border-radius: 7px 7px 2px 2px;
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  transition: height .3s;
 }
 
-.text-danger {
-  color: var(--danger) !important;
+.bar-label {
+  color: var(--muted);
+  font-size: .63rem;
 }
 
-.text-success {
-  color: var(--success) !important;
+.compare-metric {
+  margin-bottom: 17px;
 }
 
-.text-center {
-  text-align: center;
+.compare-metric:last-child {
+  margin-bottom: 0;
 }
 
-.text-right {
+.compare-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: .82rem;
+}
+
+.compare-top span {
+  color: var(--muted);
   text-align: right;
 }
 
-.flex {
-  display: flex;
+.compare-bars {
+  display: grid;
+  gap: 5px;
 }
 
-.flex-between {
+.compare-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.compare-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--accent);
+}
+
+.compare-bar.previous span {
+  background: var(--accent-2);
+}
+
+.insight-line {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .83rem;
+  line-height: 1.5;
+}
+
+.insight-line:last-child {
+  border: 0;
+}
+
+/* SETTINGS */
+
+.settings-group {
+  display: grid;
+  gap: 11px;
+}
+
+.settings-group h3 {
+  margin: 0;
+}
+
+.settings-group > label {
+  margin-top: 5px;
+}
+
+.accent-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.accent-swatch {
+  width: 29px;
+  height: 29px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  outline: 1px solid var(--border);
+  background: var(--swatch);
+}
+
+.accent-swatch.active {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.category-list {
+  display: grid;
+  gap: 7px;
+}
+
+.category-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: .8rem;
 }
 
-.flex-wrap {
-  flex-wrap: wrap;
+.category-row button {
+  border: 0;
+  background: transparent;
+  color: var(--danger);
 }
 
-.gap-sm {
+.button-stack {
+  display: grid;
   gap: 8px;
 }
 
-.gap-md {
-  gap: 14px;
-}
-
-.mt-0 {
-  margin-top: 0 !important;
-}
-
-.mt-1 {
-  margin-top: 8px !important;
-}
-
-.mt-2 {
-  margin-top: 16px !important;
-}
-
-.mb-0 {
-  margin-bottom: 0 !important;
-}
-
-.hidden,
-[hidden] {
-  display: none !important;
-}
-
-/* ==================== 29. RESPONSIVE TABLETS ==================== */
-
-@media (max-width: 900px) {
-  .app,
-  .app-shell {
-    width: min(100% - 28px, var(--content-width));
-  }
-
-  .grid,
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .analytics-grid,
-  .analytics-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .shop-rewards,
-  #shop-rewards,
-  .shop-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ==================== 30. RESPONSIVE PHONES ==================== */
-
-@media (max-width: 600px) {
-  :root {
-    --nav-height: 68px;
-    --radius-lg: 17px;
-    --radius-xl: 21px;
-  }
-
-  body {
-    font-size: 13px;
-  }
-
-  .app,
-  .app-shell {
-    width: calc(100% - 24px);
-    padding-bottom: calc(var(--nav-height) + 25px);
-  }
-
-  .topbar {
-    min-height: 64px;
-    gap: 10px;
-    padding: 12px 0;
-  }
-
-  .topbar h1,
-  .topbar .brand {
-    font-size: 18px;
-  }
-
-  .view {
-    padding-top: 17px;
-  }
-
-  .view > * + * {
-    margin-top: 14px;
-  }
-
-  .hero,
-  .hero-card,
-  .command-hero {
-    padding: 21px 17px;
-  }
-
-  .hero h1,
-  .hero-card h1,
-  .command-hero h1 {
-    font-size: 27px;
-  }
-
-  .card,
-  .panel,
-  .settings-card {
-    padding: 15px;
-  }
-
-  .grid,
-  .stats-grid,
-  .card-grid,
-  .cards-grid,
-  .analytics-grid,
-  .analytics-cards {
-    gap: 9px;
-  }
-
-  .stat-card {
-    padding: 13px;
-  }
-
-  .stat-card .stat-value,
-  .stat-value {
-    font-size: 25px;
-  }
-
-  .stat-icon {
-    width: 30px;
-    height: 30px;
-    margin-bottom: 10px;
-  }
-
-  .level-card {
-    gap: 12px;
-    padding: 15px;
-  }
-
-  .level-orb,
-  #level-orb {
-    width: 49px;
-    height: 49px;
-    font-size: 18px;
-  }
-
-  .task-card,
-  .task-item,
-  .task-row {
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .calendar-card {
-    padding: 12px;
-  }
-
-  .calendar-grid,
-  .calendar-days,
-  #calendar-grid {
-    gap: 4px;
-  }
-
-  .calendar-day,
-  .calendar-date {
-    min-height: 37px;
-    border-radius: 8px;
-    font-size: 11px;
-  }
-
-  .achievement-card {
-    gap: 10px;
-    padding: 11px;
-  }
-
-  .achievement-icon {
-    width: 37px;
-    height: 37px;
-    font-size: 17px;
-  }
-
-  .shop-card {
-    gap: 10px;
-    padding: 13px;
-  }
-
-  .shop-reward-icon {
-    width: 37px;
-    height: 37px;
-    font-size: 18px;
-  }
-
-  .bottom-nav {
-    gap: 0;
-    padding-right: 5px;
-    padding-left: 5px;
-  }
-
-  .bottom-nav-inner {
-    gap: 1px;
-  }
-
-  .nav-item {
-    gap: 3px;
-    min-height: 45px;
-    padding: 6px 2px;
-    font-size: 9px;
-  }
-
-  .nav-item svg,
-  .nav-item .icon {
-    width: 17px;
-    height: 17px;
-    font-size: 16px;
-  }
-
-  .toast,
-  #toast {
-    bottom: calc(var(--nav-height) + 12px);
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .setting-row,
-  .settings-row {
-    gap: 9px;
-  }
-
-  .setting-row select,
-  .settings-row select {
-    min-width: 100px;
-  }
-}
-
-/* ==================== 31. VERY SMALL SCREENS ==================== */
-
-@media (max-width: 380px) {
-  .app,
-  .app-shell {
-    width: calc(100% - 18px);
-  }
-
-  .grid,
-  .stats-grid,
-  .card-grid,
-  .cards-grid,
-  .analytics-grid,
-  .analytics-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-card {
-    padding: 15px;
-  }
-
-  .stat-icon {
-    display: none;
-  }
-
-  .shop-card {
-    flex-wrap: wrap;
-  }
-
-  .shop-reward-action {
-    width: 100%;
-    align-items: center;
-    flex-direction: row;
-    justify-content: space-between;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-
-  .achievement-claim {
-    white-space: normal;
-  }
-}
-
-/* ==================== 32. REDUCED MOTION ==================== */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ==========================================================
-   DailyApp 3.0 — Gentle Style Polish
-   Original look behalten • Mehr Grün • Bessere Buttons
-   ========================================================== */
-
-/* 1. Farben: weniger Weiß, mehr natürliche Grüntöne */
-
-:root {
-  --bg: #090e0a;
-  --surface: #111811;
-  --surface-2: #172118;
-  --surface-3: #202c21;
-  --surface-hover: #28382a;
-
-  /* Lesbarer als reines Weiß */
-  --text: #dce7d8;
-  --muted: #9bab96;
-  --muted-2: #bdcbb8;
-
-  /* Dezent grüne Umrandungen */
-  --border: rgba(137, 184, 126, 0.15);
-  --border-hover: rgba(153, 207, 141, 0.29);
-
-  /* Coins immer gelb */
-  --coin-color: #f4c95d;
-  --coin-bright: #ffdc7d;
-  --coin-rgb: 244, 201, 93;
-
-  /* Accent-Farbe weiterhin von DailyApp übernehmen */
-  --transition-fast: 150ms ease;
-  --transition: 220ms ease;
-}
-
-/* Hellmodus nicht versehentlich dunkel färben */
-html[data-theme="light"],
-html.light,
-body.light,
-body[data-theme="light"] {
-  --bg: #edf3e9;
-  --surface: #f8fbf5;
-  --surface-2: #eff5eb;
-  --surface-3: #e4eddf;
-  --surface-hover: #dce8d6;
-
-  --text: #29372a;
-  --muted: #70816d;
-  --muted-2: #52634f;
-
-  --border: rgba(54, 91, 47, 0.14);
-  --border-hover: rgba(54, 110, 47, 0.26);
-}
-
-/* 2. Grundfarben und Schrift */
-
-body {
-  color: var(--text, #dce7d8);
-  background-color: var(--bg, #090e0a);
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: var(--text, #dce7d8);
-  letter-spacing: -0.025em;
-}
-
-p {
-  color: var(--muted, #9bab96);
-}
-
-small,
-.small,
-.muted {
-  color: var(--muted, #9bab96);
-}
-
-label {
-  color: var(--muted-2, #bdcbb8);
-}
-
-strong,
-b {
-  color: inherit;
-}
-
-/* Zusätzliche Textfarben für mehr visuelle Hierarchie */
-
-.text-accent,
-.text-success {
-  color: var(--accent, #b6ff00);
-}
-
-.text-coin {
-  color: var(--coin-color, #f4c95d);
-}
-
-.text-muted {
-  color: var(--muted, #9bab96);
-}
-
-.text-danger {
-  color: var(--danger, #f07872);
-}
-
-/* 3. Karten klarer voneinander trennen */
-
-.card,
-.panel,
-.stat-card,
-.task-card,
-.calendar-card,
-.level-card,
-.settings-card,
-.settings-group,
-.settings-section,
-.achievement-card,
-.shop-card,
-.analytics-card {
-  border-color: var(--border, rgba(137, 184, 126, 0.15));
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
-
-  transition:
-    border-color var(--transition, 220ms ease),
-    background-color var(--transition, 220ms ease),
-    box-shadow var(--transition, 220ms ease),
-    transform var(--transition, 220ms ease);
-}
-
-.card:hover,
-.panel:hover,
-.stat-card:hover,
-.task-card:hover,
-.achievement-card:hover,
-.shop-card:hover {
-  border-color: var(--border-hover, rgba(153, 207, 141, 0.29));
-}
-
-/* Keine grellen oder rein weißen Kartenflächen */
-.card,
-.panel,
-.stat-card,
-.task-card,
-.calendar-card,
-.level-card,
-.settings-card,
-.settings-group,
-.settings-section,
-.achievement-card,
-.shop-card,
-.analytics-card {
-  background-color: var(--surface, #111811);
-}
-
-/* Leichte grüne Unterschiede zwischen einzelnen Bereichen */
-
-.stat-card,
-.shop-card,
-.achievement-card {
-  background-image: linear-gradient(
-    140deg,
-    rgba(80, 135, 75, 0.045),
-    transparent 65%
-  );
-}
-
-/* 4. Buttons: größer und angenehmer anklickbar */
-
-.btn,
-.button,
-.primary-button,
-.secondary-button,
-.shop-buy,
-.achievement-claim,
-button[type="submit"] {
-  min-height: 44px;
-  padding: 11px 17px;
-  border-radius: 11px;
-
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.25;
-
-  transition:
-    background-color var(--transition-fast, 150ms ease),
-    border-color var(--transition-fast, 150ms ease),
-    color var(--transition-fast, 150ms ease),
-    box-shadow var(--transition-fast, 150ms ease),
-    transform var(--transition-fast, 150ms ease);
-}
-
-.btn:hover,
-.button:hover,
-.primary-button:hover,
-.secondary-button:hover,
-.shop-buy:hover,
-.achievement-claim:hover,
-button[type="submit"]:hover {
-  transform: translateY(-1px);
-}
-
-.btn:active,
-.button:active,
-.primary-button:active,
-.secondary-button:active,
-.shop-buy:active,
-.achievement-claim:active {
-  transform: scale(0.98);
-}
-
-/* Accent-Buttons bleiben dynamisch */
-
-.btn-primary,
-.primary-button,
-button.primary,
-button[type="submit"],
-.shop-buy,
-.achievement-claim {
-  background-color: var(--accent, #b6ff00);
-  color: #152014;
-  border-color: transparent;
-}
-
-.btn-primary:hover,
-.primary-button:hover,
-button.primary:hover,
-button[type="submit"]:hover,
-.shop-buy:hover,
-.achievement-claim:hover {
-  background-color: var(--accent-bright, var(--accent, #b6ff00));
-}
-
-/* Sekundäre Buttons mit etwas mehr Farbe */
-
-.btn:not(.btn-primary):not(.btn-danger),
-.button:not(.primary-button):not(.btn-danger),
-.secondary-button {
-  border-color: var(--border-hover, rgba(153, 207, 141, 0.29));
-  background-color: var(--surface-2, #172118);
-  color: var(--text, #dce7d8);
-}
-
-/* Kleine Icon- und Lösch-Buttons bleiben kompakt */
-
-.icon-button,
-.delete-task,
-.close-button {
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 10px;
-}
-
-/* 5. XP und Coins unterscheiden */
-
-#home-xp,
-.xp-value,
-.xp-badge {
-  color: var(--accent, #b6ff00);
-}
-
-#home-coins,
-#shop-coins,
-#progress-coins,
-#progress-earned-coins,
-#analytics-coins,
-.coin,
-.coins,
-.coin-value,
-.coin-amount,
-.wallet-balance {
-  color: var(--coin-color, #f4c95d);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Coin-Preise im Shop */
-
-.shop-reward-action strong,
-#shop-history .history-row > span {
-  color: var(--coin-color, #f4c95d);
-}
-
-/* Wallet mit dezenter goldener Note */
-
-.wallet-card,
-.coin-wallet {
-  border-color: rgba(var(--coin-rgb, 244, 201, 93), 0.19);
-}
-
-/* 6. Fortschrittsbalken etwas sauberer */
-
-.progress,
-.progress-track,
-.xp-track,
-.level-progress,
-.daily-progress {
-  overflow: hidden;
-  border-radius: 999px;
-}
-
-.progress-fill,
-.progress-bar,
-.xp-fill,
-.level-progress-fill,
-#daily-progress-fill,
-#level-progress-fill {
-  border-radius: inherit;
-  transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* 7. Aufgaben: lesbarer, weniger grell */
-
-.task-title {
-  color: var(--text, #dce7d8);
-  font-weight: 650;
-}
-
-.task-description {
-  color: var(--muted, #9bab96);
-  line-height: 1.55;
-}
-
-.task-category,
-.category-tag,
-.badge,
-.tag {
-  border-color: var(--border, rgba(137, 184, 126, 0.15));
-  background-color: var(--surface-2, #172118);
-}
-
-.task-card.completed,
-.task-item.completed,
-.task-row.completed {
-  opacity: 0.68;
-}
-
-/* 8. Navigation: aktive Seite besser erkennbar */
-
-.nav-item {
-  border-radius: 12px;
-  transition:
-    color var(--transition-fast, 150ms ease),
-    background-color var(--transition-fast, 150ms ease),
-    border-color var(--transition-fast, 150ms ease);
-}
-
-.nav-item.active,
-.nav-item[aria-current="page"] {
-  color: var(--accent, #b6ff00);
-  background-color: rgba(var(--accent-rgb, 182, 255, 0), 0.09);
-}
-
-/* 9. Formulare: besserer Kontrast */
-
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-select,
-textarea {
-  max-width: 100%;
-  border-color: var(--border, rgba(137, 184, 126, 0.15));
-  border-radius: 11px;
-
-  transition:
-    border-color var(--transition-fast, 150ms ease),
-    box-shadow var(--transition-fast, 150ms ease);
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.58);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 182, 255, 0), 0.08);
-}
-
-/* 10. Toast und Meldungen */
-
-#toast,
-.toast {
-  border: 1px solid var(--border-hover, rgba(153, 207, 141, 0.29));
-  border-radius: 13px;
-}
-
-/* 11. Handy: Buttons passend halten, nichts abschneiden */
-
-@media (max-width: 600px) {
-  .app,
-  .app-shell {
-    width: calc(100% - 22px);
-  }
-
-  .btn,
-  .button,
-  .primary-button,
-  .secondary-button,
-  .shop-buy,
-  .achievement-claim,
-  button[type="submit"] {
-    min-height: 41px;
-    padding: 10px 13px;
-    font-size: 12px;
-  }
-
-  .quick-actions {
-    gap: 8px;
-  }
-
-  .quick-actions > button,
-  .quick-actions > .btn,
-  .quick-actions > .button {
-    max-width: 100%;
-  }
-
-  .card,
-  .panel,
-  .settings-card,
-  .settings-group,
-  .settings-section {
-    padding: 15px;
-  }
-
-  .task-card,
-  .task-item,
-  .task-row {
-    gap: 10px;
-  }
-
-  .shop-card {
-    min-width: 0;
-    gap: 10px;
-  }
-
-  .shop-reward-copy {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .shop-reward-action {
-    flex-shrink: 0;
-  }
-
-  .nav-item {
-    min-width: 0;
-    padding-right: 2px;
-    padding-left: 2px;
-    font-size: 9px;
-  }
-
-  .bottom-nav {
-    padding-right: 5px;
-    padding-left: 5px;
-  }
-
-  .page-title,
-  .section-title {
-    gap: 9px;
-  }
-
-  .page-title > *,
-  .section-title > * {
-    min-width: 0;
-  }
-
-  input,
-  select,
-  textarea {
-    min-width: 0;
-  }
-}
-
-/* Sehr schmale Handys */
-
-@media (max-width: 380px) {
-  .app,
-  .app-shell {
-    width: calc(100% - 16px);
-  }
-
-  .shop-card {
-    flex-wrap: wrap;
-  }
-
-  .shop-reward-action {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 100%;
-  }
-}
-
-/* 12. Bewegung reduzieren, wenn gewünscht */
-
-@media (prefers-reduced-motion: reduce) {
-  .card,
-  .panel,
-  .stat-card,
-  .task-card,
-  .shop-card,
-  .btn,
-  .button,
-  .primary-button,
-  .secondary-button {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
-/* ==================================================
-   DailyApp — Fix: Kalender-Balken
-   Monats- und Wochenansicht
-   ================================================== */
-
-#view-calendar .event-bar,
-#view-calendar .calendar-bar,
-#view-calendar .calendar-event-bar,
-#view-calendar .calendar-day-bar,
-#view-calendar .task-bar,
-#view-calendar .week-bar,
-#view-calendar .month-bar,
-#view-calendar .week-event,
-#view-calendar .month-event,
-#view-calendar .calendar-event,
-#view-calendar .calendar-task {
+.file-button {
   display: block;
-  visibility: visible;
-  opacity: 1;
-  max-width: 100%;
-  border-radius: 5px;
-}
-
-/* Kleine farbige Balken */
-#view-calendar .event-bar,
-#view-calendar .calendar-bar,
-#view-calendar .calendar-event-bar,
-#view-calendar .calendar-day-bar,
-#view-calendar .task-bar,
-#view-calendar .week-bar,
-#view-calendar .month-bar {
-  min-height: 5px;
-}
-
-/* Monats- und Wochenraster nicht abschneiden */
-#view-calendar .calendar-grid,
-#view-calendar .calendar-days,
-#view-calendar #calendar-grid {
-  min-width: 0;
-}
-
-/* Balken sollen ihre vorhandenen Farben behalten */
-#view-calendar .event-bar,
-#view-calendar .calendar-bar,
-#view-calendar .calendar-event-bar,
-#view-calendar .calendar-day-bar,
-#view-calendar .task-bar,
-#view-calendar .week-bar,
-#view-calendar .month-bar {
-  overflow: visible;
-}
-
-/* Kleine Displays */
-@media (max-width: 600px) {
-  #view-calendar .event-bar,
-  #view-calendar .calendar-bar,
-  #view-calendar .calendar-event-bar,
-  #view-calendar .calendar-day-bar,
-  #view-calendar .task-bar,
-  #view-calendar .week-bar,
-  #view-calendar .month-bar {
-    max-width: 100%;
-    min-width: 0;
-  }
-}
-
-/* ==========================================================
-   DailyApp 3.0 — Readability & Spacing Fix
-   XP • Streaks • System Controls • Checkboxes • Calendar
-   ========================================================== */
-
-/* 1. XP, Streaks und Statistiken besser lesbar */
-
-#view-progress .stat-value,
-#view-progress .stat-number,
-#view-progress .progress-value,
-#view-progress .metric-value,
-#view-analytics .stat-value,
-#view-analytics .stat-number,
-.stat-card .stat-value,
-.stat-card .stat-number {
-  font-size: clamp(24px, 3vw, 30px);
-  font-weight: 750;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
-  font-variant-numeric: tabular-nums;
-}
-
-#progress-xp,
-#progress-total-xp,
-#progress-earned-xp,
-#progress-streak,
-#progress-best-streak,
-#progress-level,
-#progress-coins,
-#progress-earned-coins,
-#analytics-today,
-#analytics-week,
-#analytics-week-xp,
-#analytics-total,
-#analytics-coins,
-#analytics-focus {
-  font-size: 25px;
-  font-weight: 750;
-  line-height: 1.3;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Zahlen sollen lesbar bleiben, auch wenn sie länger werden */
-#view-progress .stat-card,
-#view-analytics .stat-card {
-  min-width: 0;
-  padding: 17px;
-}
-
-#view-progress .stat-label,
-#view-analytics .stat-label,
-#view-progress .stat-description,
-#view-analytics .stat-description,
-#view-progress .stat-card small,
-#view-analytics .stat-card small {
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-/* Die Beschriftungen leicht grün-grau statt reinweiß */
-#view-progress .stat-label,
-#view-analytics .stat-label {
-  color: var(--muted, #9bab96);
-  font-weight: 550;
-}
-
-/* 2. System Controls und Einstellungen lesbarer machen */
-
-#view-settings label,
-#view-settings .setting-copy strong,
-#view-settings .settings-copy strong,
-#view-settings .setting-row strong,
-#view-settings .settings-row strong {
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-#view-settings .setting-copy small,
-#view-settings .settings-copy small,
-#view-settings .setting-row small,
-#view-settings .settings-row small,
-#view-settings .settings-group > p,
-#view-settings .settings-section > p {
-  font-size: 12px;
-  line-height: 1.65;
-}
-
-#view-settings .settings-group h2,
-#view-settings .settings-section h2 {
-  font-size: 20px;
-}
-
-#view-settings .settings-group h3,
-#view-settings .settings-section h3 {
-  font-size: 16px;
-}
-
-/* Controls nicht zu eng zusammendrücken */
-#view-settings .setting-row,
-#view-settings .settings-row {
-  gap: 14px;
-  padding-block: 15px;
-}
-
-#view-settings input,
-#view-settings select,
-#view-settings textarea {
-  font-size: 13px;
-}
-
-/* 3. Aufgaben-Checkboxen größer und einfacher anklickbar */
-
-#task-list input[type="checkbox"],
-.task-list input[type="checkbox"],
-.tasks-list input[type="checkbox"],
-.task-card input[type="checkbox"],
-.task-item input[type="checkbox"],
-.task-row input[type="checkbox"] {
-  width: 21px;
-  height: 21px;
-  min-width: 21px;
-  flex-shrink: 0;
-  margin: 0;
-  accent-color: var(--accent, #b6ff00);
-  cursor: pointer;
-}
-
-/* Falls das Häkchen als eigenes Element umgesetzt ist */
-.task-check,
-.task-checkbox {
-  min-width: 22px;
-  min-height: 22px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-/* Checkbox und Aufgabentext vertikal sauber ausrichten */
-.task-card,
-.task-item,
-.task-row {
-  align-items: center;
-  gap: 12px;
-}
-
-.task-title {
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.task-description {
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* 4. Kalender: Wochentage sauber in sieben Spalten aufteilen */
-
-#view-calendar .calendar-weekdays,
-#view-calendar .calendar-weekdays-row,
-#view-calendar .calendar-weekday-row,
-#view-calendar .calendar-week-header,
-#view-calendar .calendar-day-names,
-#view-calendar #calendar-weekdays,
-#view-calendar #calendar-weekday-row {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  column-gap: 6px;
-  width: 100%;
-  min-width: 0;
-  margin-bottom: 7px;
-}
-
-#view-calendar .calendar-weekday,
-#view-calendar .calendar-day-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 8px 2px;
-  border-radius: 8px;
-  color: var(--muted, #9bab96);
-  font-size: 11px;
-  font-weight: 650;
-  line-height: 1.4;
   text-align: center;
 }
 
-/* Abstand zwischen allen Tagen im Monatsraster */
-#view-calendar .calendar-grid,
-#view-calendar .calendar-days,
-#view-calendar #calendar-grid,
-#view-calendar .month-grid,
-#view-calendar .week-grid,
-#view-calendar .calendar-week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-  min-width: 0;
+.about-card {
+  margin-bottom: 0;
 }
 
-/* Die einzelnen Kalenderfelder klar voneinander abgrenzen */
-#view-calendar .calendar-day,
-#view-calendar .calendar-date {
-  min-width: 0;
-  border-radius: 9px;
+/* TOAST */
+
+.toast {
+  position: fixed;
+  z-index: 20;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  left: 50%;
+  max-width: calc(100% - 32px);
+  padding: 11px 16px;
+  transform: translate(-50%, 15px);
+  border-radius: 100px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: .8rem;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+  transition: .2s;
 }
 
-/* Wochenansicht: mehr Platz zwischen Tagen und Ereignissen */
-#view-calendar .week-day,
-#view-calendar .week-column,
-#view-calendar .calendar-week-day {
-  min-width: 0;
-  padding-inline: 3px;
+.toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
 }
 
-/* 5. Mobile Anpassungen */
+/* RESPONSIVE */
 
-@media (max-width: 600px) {
-  #progress-xp,
-  #progress-total-xp,
-  #progress-earned-xp,
-  #progress-streak,
-  #progress-best-streak,
-  #progress-level,
-  #progress-coins,
-  #progress-earned-coins,
-  #analytics-today,
-  #analytics-week,
-  #analytics-week-xp,
-  #analytics-total,
-  #analytics-coins,
-  #analytics-focus {
-    font-size: 23px;
+@media (min-width: 600px) {
+  .app-shell {
+    padding-right: 26px;
+    padding-left: 26px;
   }
 
-  #view-progress .stat-card,
-  #view-analytics .stat-card {
+  .topbar {
+    padding-top: 30px;
+  }
+
+  .hero-card {
+    padding: 28px;
+  }
+
+  .nav-item small {
+    font-size: .7rem;
+  }
+
+  .heatmap-grid {
+    grid-template-rows: repeat(7, 13px);
+  }
+}
+
+@media (max-width: 380px) {
+  .app-shell {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .bottom-nav {
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .nav-item small {
+    font-size: .54rem;
+  }
+
+  .nav-item > span {
+    font-size: 1.08rem;
+  }
+
+  .stat-card {
     padding: 13px;
   }
 
-  #view-settings .setting-row,
-  #view-settings .settings-row {
-    gap: 10px;
-    padding-block: 13px;
+  .focus-note {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  #task-list input[type="checkbox"],
-  .task-list input[type="checkbox"],
-  .tasks-list input[type="checkbox"],
-  .task-card input[type="checkbox"],
-  .task-item input[type="checkbox"],
-  .task-row input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
+  .heatmap-grid {
+    grid-auto-columns: minmax(5px, 1fr);
+    gap: 2px;
   }
 
-  #view-calendar .calendar-weekdays,
-  #view-calendar .calendar-weekdays-row,
-  #view-calendar .calendar-weekday-row,
-  #view-calendar .calendar-week-header,
-  #view-calendar .calendar-day-names,
-  #view-calendar #calendar-weekdays,
-  #view-calendar #calendar-weekday-row {
-    column-gap: 4px;
-    margin-bottom: 6px;
-  }
-
-  #view-calendar .calendar-grid,
-  #view-calendar .calendar-days,
-  #view-calendar #calendar-grid,
-  #view-calendar .month-grid,
-  #view-calendar .week-grid,
-  #view-calendar .calendar-week-grid {
-    gap: 4px;
-  }
-
-  #view-calendar .calendar-weekday,
-  #view-calendar .calendar-day-label {
-    padding: 7px 1px;
-    font-size: 10px;
+  .heatmap-weekdays {
+    font-size: .52rem;
   }
 }
+```
