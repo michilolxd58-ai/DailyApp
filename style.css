@@ -2384,3 +2384,513 @@ li + li {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ==========================================================
+   DailyApp 3.0 — Gentle Style Polish
+   Original look behalten • Mehr Grün • Bessere Buttons
+   ========================================================== */
+
+/* 1. Farben: weniger Weiß, mehr natürliche Grüntöne */
+
+:root {
+  --bg: #090e0a;
+  --surface: #111811;
+  --surface-2: #172118;
+  --surface-3: #202c21;
+  --surface-hover: #28382a;
+
+  /* Lesbarer als reines Weiß */
+  --text: #dce7d8;
+  --muted: #9bab96;
+  --muted-2: #bdcbb8;
+
+  /* Dezent grüne Umrandungen */
+  --border: rgba(137, 184, 126, 0.15);
+  --border-hover: rgba(153, 207, 141, 0.29);
+
+  /* Coins immer gelb */
+  --coin-color: #f4c95d;
+  --coin-bright: #ffdc7d;
+  --coin-rgb: 244, 201, 93;
+
+  /* Accent-Farbe weiterhin von DailyApp übernehmen */
+  --transition-fast: 150ms ease;
+  --transition: 220ms ease;
+}
+
+/* Hellmodus nicht versehentlich dunkel färben */
+html[data-theme="light"],
+html.light,
+body.light,
+body[data-theme="light"] {
+  --bg: #edf3e9;
+  --surface: #f8fbf5;
+  --surface-2: #eff5eb;
+  --surface-3: #e4eddf;
+  --surface-hover: #dce8d6;
+
+  --text: #29372a;
+  --muted: #70816d;
+  --muted-2: #52634f;
+
+  --border: rgba(54, 91, 47, 0.14);
+  --border-hover: rgba(54, 110, 47, 0.26);
+}
+
+/* 2. Grundfarben und Schrift */
+
+body {
+  color: var(--text, #dce7d8);
+  background-color: var(--bg, #090e0a);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text, #dce7d8);
+  letter-spacing: -0.025em;
+}
+
+p {
+  color: var(--muted, #9bab96);
+}
+
+small,
+.small,
+.muted {
+  color: var(--muted, #9bab96);
+}
+
+label {
+  color: var(--muted-2, #bdcbb8);
+}
+
+strong,
+b {
+  color: inherit;
+}
+
+/* Zusätzliche Textfarben für mehr visuelle Hierarchie */
+
+.text-accent,
+.text-success {
+  color: var(--accent, #b6ff00);
+}
+
+.text-coin {
+  color: var(--coin-color, #f4c95d);
+}
+
+.text-muted {
+  color: var(--muted, #9bab96);
+}
+
+.text-danger {
+  color: var(--danger, #f07872);
+}
+
+/* 3. Karten klarer voneinander trennen */
+
+.card,
+.panel,
+.stat-card,
+.task-card,
+.calendar-card,
+.level-card,
+.settings-card,
+.settings-group,
+.settings-section,
+.achievement-card,
+.shop-card,
+.analytics-card {
+  border-color: var(--border, rgba(137, 184, 126, 0.15));
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+
+  transition:
+    border-color var(--transition, 220ms ease),
+    background-color var(--transition, 220ms ease),
+    box-shadow var(--transition, 220ms ease),
+    transform var(--transition, 220ms ease);
+}
+
+.card:hover,
+.panel:hover,
+.stat-card:hover,
+.task-card:hover,
+.achievement-card:hover,
+.shop-card:hover {
+  border-color: var(--border-hover, rgba(153, 207, 141, 0.29));
+}
+
+/* Keine grellen oder rein weißen Kartenflächen */
+.card,
+.panel,
+.stat-card,
+.task-card,
+.calendar-card,
+.level-card,
+.settings-card,
+.settings-group,
+.settings-section,
+.achievement-card,
+.shop-card,
+.analytics-card {
+  background-color: var(--surface, #111811);
+}
+
+/* Leichte grüne Unterschiede zwischen einzelnen Bereichen */
+
+.stat-card,
+.shop-card,
+.achievement-card {
+  background-image: linear-gradient(
+    140deg,
+    rgba(80, 135, 75, 0.045),
+    transparent 65%
+  );
+}
+
+/* 4. Buttons: größer und angenehmer anklickbar */
+
+.btn,
+.button,
+.primary-button,
+.secondary-button,
+.shop-buy,
+.achievement-claim,
+button[type="submit"] {
+  min-height: 44px;
+  padding: 11px 17px;
+  border-radius: 11px;
+
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
+
+  transition:
+    background-color var(--transition-fast, 150ms ease),
+    border-color var(--transition-fast, 150ms ease),
+    color var(--transition-fast, 150ms ease),
+    box-shadow var(--transition-fast, 150ms ease),
+    transform var(--transition-fast, 150ms ease);
+}
+
+.btn:hover,
+.button:hover,
+.primary-button:hover,
+.secondary-button:hover,
+.shop-buy:hover,
+.achievement-claim:hover,
+button[type="submit"]:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active,
+.button:active,
+.primary-button:active,
+.secondary-button:active,
+.shop-buy:active,
+.achievement-claim:active {
+  transform: scale(0.98);
+}
+
+/* Accent-Buttons bleiben dynamisch */
+
+.btn-primary,
+.primary-button,
+button.primary,
+button[type="submit"],
+.shop-buy,
+.achievement-claim {
+  background-color: var(--accent, #b6ff00);
+  color: #152014;
+  border-color: transparent;
+}
+
+.btn-primary:hover,
+.primary-button:hover,
+button.primary:hover,
+button[type="submit"]:hover,
+.shop-buy:hover,
+.achievement-claim:hover {
+  background-color: var(--accent-bright, var(--accent, #b6ff00));
+}
+
+/* Sekundäre Buttons mit etwas mehr Farbe */
+
+.btn:not(.btn-primary):not(.btn-danger),
+.button:not(.primary-button):not(.btn-danger),
+.secondary-button {
+  border-color: var(--border-hover, rgba(153, 207, 141, 0.29));
+  background-color: var(--surface-2, #172118);
+  color: var(--text, #dce7d8);
+}
+
+/* Kleine Icon- und Lösch-Buttons bleiben kompakt */
+
+.icon-button,
+.delete-task,
+.close-button {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+}
+
+/* 5. XP und Coins unterscheiden */
+
+#home-xp,
+.xp-value,
+.xp-badge {
+  color: var(--accent, #b6ff00);
+}
+
+#home-coins,
+#shop-coins,
+#progress-coins,
+#progress-earned-coins,
+#analytics-coins,
+.coin,
+.coins,
+.coin-value,
+.coin-amount,
+.wallet-balance {
+  color: var(--coin-color, #f4c95d);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Coin-Preise im Shop */
+
+.shop-reward-action strong,
+#shop-history .history-row > span {
+  color: var(--coin-color, #f4c95d);
+}
+
+/* Wallet mit dezenter goldener Note */
+
+.wallet-card,
+.coin-wallet {
+  border-color: rgba(var(--coin-rgb, 244, 201, 93), 0.19);
+}
+
+/* 6. Fortschrittsbalken etwas sauberer */
+
+.progress,
+.progress-track,
+.xp-track,
+.level-progress,
+.daily-progress {
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.progress-fill,
+.progress-bar,
+.xp-fill,
+.level-progress-fill,
+#daily-progress-fill,
+#level-progress-fill {
+  border-radius: inherit;
+  transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 7. Aufgaben: lesbarer, weniger grell */
+
+.task-title {
+  color: var(--text, #dce7d8);
+  font-weight: 650;
+}
+
+.task-description {
+  color: var(--muted, #9bab96);
+  line-height: 1.55;
+}
+
+.task-category,
+.category-tag,
+.badge,
+.tag {
+  border-color: var(--border, rgba(137, 184, 126, 0.15));
+  background-color: var(--surface-2, #172118);
+}
+
+.task-card.completed,
+.task-item.completed,
+.task-row.completed {
+  opacity: 0.68;
+}
+
+/* 8. Navigation: aktive Seite besser erkennbar */
+
+.nav-item {
+  border-radius: 12px;
+  transition:
+    color var(--transition-fast, 150ms ease),
+    background-color var(--transition-fast, 150ms ease),
+    border-color var(--transition-fast, 150ms ease);
+}
+
+.nav-item.active,
+.nav-item[aria-current="page"] {
+  color: var(--accent, #b6ff00);
+  background-color: rgba(var(--accent-rgb, 182, 255, 0), 0.09);
+}
+
+/* 9. Formulare: besserer Kontrast */
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  max-width: 100%;
+  border-color: var(--border, rgba(137, 184, 126, 0.15));
+  border-radius: 11px;
+
+  transition:
+    border-color var(--transition-fast, 150ms ease),
+    box-shadow var(--transition-fast, 150ms ease);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.58);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 182, 255, 0), 0.08);
+}
+
+/* 10. Toast und Meldungen */
+
+#toast,
+.toast {
+  border: 1px solid var(--border-hover, rgba(153, 207, 141, 0.29));
+  border-radius: 13px;
+}
+
+/* 11. Handy: Buttons passend halten, nichts abschneiden */
+
+@media (max-width: 600px) {
+  .app,
+  .app-shell {
+    width: calc(100% - 22px);
+  }
+
+  .btn,
+  .button,
+  .primary-button,
+  .secondary-button,
+  .shop-buy,
+  .achievement-claim,
+  button[type="submit"] {
+    min-height: 41px;
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+
+  .quick-actions {
+    gap: 8px;
+  }
+
+  .quick-actions > button,
+  .quick-actions > .btn,
+  .quick-actions > .button {
+    max-width: 100%;
+  }
+
+  .card,
+  .panel,
+  .settings-card,
+  .settings-group,
+  .settings-section {
+    padding: 15px;
+  }
+
+  .task-card,
+  .task-item,
+  .task-row {
+    gap: 10px;
+  }
+
+  .shop-card {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .shop-reward-copy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .shop-reward-action {
+    flex-shrink: 0;
+  }
+
+  .nav-item {
+    min-width: 0;
+    padding-right: 2px;
+    padding-left: 2px;
+    font-size: 9px;
+  }
+
+  .bottom-nav {
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+
+  .page-title,
+  .section-title {
+    gap: 9px;
+  }
+
+  .page-title > *,
+  .section-title > * {
+    min-width: 0;
+  }
+
+  input,
+  select,
+  textarea {
+    min-width: 0;
+  }
+}
+
+/* Sehr schmale Handys */
+
+@media (max-width: 380px) {
+  .app,
+  .app-shell {
+    width: calc(100% - 16px);
+  }
+
+  .shop-card {
+    flex-wrap: wrap;
+  }
+
+  .shop-reward-action {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* 12. Bewegung reduzieren, wenn gewünscht */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .panel,
+  .stat-card,
+  .task-card,
+  .shop-card,
+  .btn,
+  .button,
+  .primary-button,
+  .secondary-button {
+    animation: none !important;
+    transition: none !important;
+  }
+}
