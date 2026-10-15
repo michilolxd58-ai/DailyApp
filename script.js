@@ -1,3059 +1,3106 @@
-/* DailyApp 3.1 — Command Center + Coin Economy + Motion */
-(function () {
-  "use strict";
-
-  var STORAGE_KEY = "dailyapp-midnight-v1";
-  var SETTINGS_KEY = "dailyapp-appearance-v1";
-  var DAILY_COINS = 50;
-  var MAX_COINS = 100000000;
-  var MAX_REWARD_COST = 10000;
-
-  var DEFAULT_CATEGORIES = [
-    { id: "daily", name: "Daily", xp: 10 },
-    { id: "school", name: "School", xp: 20 },
-    { id: "training", name: "Training", xp: 30 },
-    { id: "challenge", name: "Challenge", xp: 50 }
-  ];
-
-  var TASK_POOL = [
-    "Make your bed", "Drink a glass of water",
-    "Read for 10 minutes", "Tidy your desk for 5 minutes",
-    "Take a short walk", "Stretch for 5 minutes",
-    "Write down your top priority", "Review your notes",
-    "Prepare your bag for tomorrow",
-    "Learn one new coding concept", "Finish a small school task",
-    "Put your phone away for 20 minutes",
-    "Plan tomorrow's first task", "Clean one small area",
-    "Practice a skill for 15 minutes",
-    "Spend 10 minutes learning something"
-  ];
-
-  var DEFAULT_REWARDS = [
-    {
-      id: "gaming30",
-      name: "Gaming Time",
-      description: "30 Minuten geplante Gaming-Freizeit.",
-      minutes: 30, cost: 60, icon: "🎮"
-    },
-    {
-      id: "chill60",
-      name: "Chill Mode",
-      description: "60 Minuten frei verfügbare Freizeit.",
-      minutes: 60, cost: 100, icon: "🌙"
-    },
-    {
-      id: "break90",
-      name: "Long Break",
-      description: "90 Minuten bewusst eingeplante Freizeit.",
-      minutes: 90, cost: 140, icon: "🧘"
-    }
-  ];
-
-  var ACCENTS = {
-    toxic: ["#b6ff00", "182,255,0"],
-    mint: ["#63e6b0", "99,230,176"],
-    blue: ["#73b7ff", "115,183,255"],
-    purple: ["#b69cff", "182,156,255"],
-    pink: ["#ff8bc2", "255,139,194"],
-    orange: ["#ffb86b", "255,184,107"],
-    red: ["#ff7788", "255,119,136"],
-    cyan: ["#5de2e7", "93,226,231"],
-    yellow: ["#f1d66d", "241,214,109"],
-    lime: ["#b7e66d", "183,230,109"],
-    white: ["#d9e4f5", "217,228,245"]
-  };
-
-  var state;
-  var appearance;
-  var currentFilter = "all";
-  var calendarCursor = new Date();
-  var selectedDate = dateKey(new Date());
-  var timerSeconds = 25 * 60;
-  var timerInterval = null;
-  var timerRunning = false;
-  var toastTimer = null;
-  var animationFrameIds = {};
-  var pendingRewardId = null;
-  var previousView = null;
-
-  function $(selector) {
-    return document.querySelector(selector);
-  }
-
-  function $$(selector) {
-    return Array.prototype.slice.call(
-      document.querySelectorAll(selector)
-    );
-  }
-
-  function pad(value) {
-    return String(value).padStart(2, "0");
-  }
-
-  function dateKey(date) {
-    return date.getFullYear() + "-" +
-      pad(date.getMonth() + 1) + "-" +
-      pad(date.getDate());
-  }
-
-  function todayKey() {
-    return dateKey(new Date());
-  }
 
-  function parseDate(key) {
-    var parts = String(key).split("-");
-    return new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-  }
-
-  function shiftDate(date, days) {
-    var result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  }
-
-  function makeId() {
-    return Date.now().toString(36) +
-      Math.random().toString(36).slice(2, 8);
-  }
-
-  function isDateKey(value) {
-    if (typeof value !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      return false;
-    }
-
-    var date = parseDate(value);
-    return !isNaN(date.getTime()) &&
-      dateKey(date) === value;
-  }
-
-  function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, function (character) {
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      }[character];
-    });
-  }
-
-  function setText(selector, value) {
-    var el = $(selector);
-    if (el) el.textContent = String(value);
-  }
-
-  function setWidth(selector, value) {
-    var el = $(selector);
-
-    if (el) {
-      el.style.width =
-        Math.max(0, Math.min(100, Number(value) || 0)) + "%";
-    }
-  }
-
-  /* -------------------------------------------------------
-     MOTION SYSTEM
-     Subtle accent glow, number animations, view transitions,
-     and reward modal styles are installed automatically.
-  ------------------------------------------------------- */
-
-  function prefersReducedMotion() {
-    return !!(
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
-  }
-
-  function installMotionStyles() {
-    if ($("#dailyapp-motion-styles")) return;
-
-    var style = document.createElement("style");
-    style.id = "dailyapp-motion-styles";
-
-    style.textContent = `
-      :root {
-        --dailyapp-glow-strength: .075;
-      }
-
-      body {
-        isolation: isolate;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-        background:
-          radial-gradient(
-            ellipse at 12% 0%,
-            rgba(var(--accent-rgb, 182,255,0), .075),
-            transparent 48%
-          ),
-          radial-gradient(
-            ellipse at 90% 90%,
-            rgba(var(--accent-rgb, 182,255,0), .045),
-            transparent 42%
-          );
-        opacity: 1;
-        transition: opacity .45s ease;
-      }
-
-      .view {
-        animation-duration: .34s;
-        animation-timing-function: cubic-bezier(.2,.7,.2,1);
-      }
-
-      .view.dailyapp-view-enter {
-        animation-name: dailyappViewEnter;
-      }
-
-      @keyframes dailyappViewEnter {
-        from {
-          opacity: .45;
-          transform: translateY(7px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      #home-xp,
-      #home-coins,
-      #shop-coins,
-      #progress-level,
-      #level-orb,
-      #level-xp-text,
-      #daily-progress-percent {
-        font-variant-numeric: tabular-nums;
-        transition:
-          color .25s ease,
-          text-shadow .25s ease;
-      }
-
-      .dailyapp-number-pop {
-        animation: dailyappNumberPop .36s ease-out;
-      }
-
-      @keyframes dailyappNumberPop {
-        0% { transform: scale(1); }
-        45% {
-          transform: scale(1.075);
-          color: var(--accent, #b6ff00);
-          text-shadow: 0 0 16px rgba(var(--accent-rgb, 182,255,0), .22);
-        }
-        100% { transform: scale(1); }
-      }
-
-      #daily-progress-fill,
-      #level-progress-fill,
-      .achievement [style*="width:"],
-      .compare-bar span,
-      .bar-fill {
-        transition:
-          width .55s cubic-bezier(.2,.7,.2,1),
-          height .55s cubic-bezier(.2,.7,.2,1);
-      }
-
-      .task-card,
-      .shop-history-item,
-      .category-row,
-      .achievement,
-      .compare-metric {
-        transition:
-          border-color .22s ease,
-          background-color .22s ease,
-          transform .22s ease,
-          box-shadow .22s ease;
-      }
-
-      .shop-buy,
-      #custom-reward-open,
-      .nav-item,
-      .bottom-nav [data-view] {
-        transition:
-          transform .2s ease,
-          filter .2s ease,
-          background-color .2s ease;
-      }
-
-      .shop-buy:active,
-      #custom-reward-open:active {
-        transform: scale(.97);
-      }
-
-      #dailyapp-reward-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 99999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: rgba(0, 0, 0, .64);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity .22s ease, visibility .22s ease;
-      }
-
-      #dailyapp-reward-overlay.open {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-      }
-
-      #dailyapp-reward-modal {
-        width: min(100%, 430px);
-        max-height: min(85vh, 720px);
-        overflow-y: auto;
-        padding: 25px;
-        border: 1px solid rgba(var(--accent-rgb, 182,255,0), .27);
-        border-radius: 23px;
-        background: var(--card, #111411);
-        color: var(--text, #f3f5f0);
-        box-shadow:
-          0 24px 90px rgba(0,0,0,.45),
-          0 0 35px rgba(var(--accent-rgb, 182,255,0), .075);
-        transform: translateY(12px) scale(.975);
-        transition: transform .24s cubic-bezier(.2,.7,.2,1);
-      }
-
-      #dailyapp-reward-overlay.open #dailyapp-reward-modal {
-        transform: translateY(0) scale(1);
-      }
-
-      #dailyapp-reward-modal * {
-        box-sizing: border-box;
-      }
-
-      .dailyapp-modal-kicker {
-        margin: 0 0 8px;
-        color: var(--accent, #b6ff00);
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: .15em;
-        text-transform: uppercase;
-      }
-
-      .dailyapp-modal-title {
-        margin: 0;
-        font-size: 25px;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-      }
-
-      .dailyapp-modal-description {
-        margin: 10px 0 20px;
-        color: var(--muted, #9da59a);
-        font-size: 14px;
-        line-height: 1.6;
-      }
-
-      .dailyapp-reward-icon {
-        display: grid;
-        place-items: center;
-        width: 64px;
-        height: 64px;
-        margin-bottom: 18px;
-        border-radius: 19px;
-        background: rgba(var(--accent-rgb, 182,255,0), .09);
-        border: 1px solid rgba(var(--accent-rgb, 182,255,0), .18);
-        font-size: 31px;
-      }
-
-      .dailyapp-balance-box {
-        display: grid;
-        gap: 12px;
-        margin: 18px 0 22px;
-        padding: 16px;
-        border-radius: 15px;
-        background: rgba(128,128,128,.075);
-      }
-
-      .dailyapp-balance-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        font-size: 13px;
-      }
-
-      .dailyapp-balance-row span {
-        color: var(--muted, #9da59a);
-      }
-
-      .dailyapp-balance-row strong {
-        font-variant-numeric: tabular-nums;
-        text-align: right;
-      }
-
-      .dailyapp-balance-row.after strong {
-        color: var(--accent, #b6ff00);
-      }
-
-      .dailyapp-modal-actions {
-        display: flex;
-        gap: 10px;
-      }
-
-      .dailyapp-modal-button {
-        flex: 1;
-        min-height: 46px;
-        padding: 12px 15px;
-        border: 1px solid rgba(128,128,128,.22);
-        border-radius: 13px;
-        font: inherit;
-        font-weight: 750;
-        cursor: pointer;
-        transition: transform .16s ease, opacity .16s ease;
-      }
-
-      .dailyapp-modal-button:active {
-        transform: scale(.97);
-      }
-
-      .dailyapp-modal-cancel {
-        background: rgba(128,128,128,.09);
-        color: inherit;
-      }
-
-      .dailyapp-modal-confirm {
-        border-color: transparent;
-        background: var(--accent, #b6ff00);
-        color: #10130b;
-      }
-
-      .dailyapp-modal-confirm:disabled {
-        opacity: .45;
-        cursor: not-allowed;
-      }
-
-      .dailyapp-modal-confirm:disabled:active {
-        transform: none;
-      }
-
-      .dailyapp-reward-success {
-        text-align: center;
-      }
-
-      .dailyapp-success-icon {
-        display: grid;
-        place-items: center;
-        width: 78px;
-        height: 78px;
-        margin: 0 auto 19px;
-        border-radius: 50%;
-        background: rgba(var(--accent-rgb, 182,255,0), .12);
-        border: 1px solid rgba(var(--accent-rgb, 182,255,0), .28);
-        color: var(--accent, #b6ff00);
-        font-size: 36px;
-        animation: dailyappSuccessPop .45s cubic-bezier(.2,.8,.2,1);
-      }
-
-      @keyframes dailyappSuccessPop {
-        0% { transform: scale(.55); opacity: 0; }
-        70% { transform: scale(1.09); opacity: 1; }
-        100% { transform: scale(1); }
-      }
-
-      .dailyapp-coin-deduction {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        margin: 14px auto 0;
-        padding: 8px 13px;
-        border-radius: 999px;
-        color: #ffb1a9;
-        background: rgba(255,100,100,.09);
-        font-weight: 800;
-        animation: dailyappCoinFloat .75s ease-out both;
-      }
-
-      @keyframes dailyappCoinFloat {
-        0% { opacity: 0; transform: translateY(9px) scale(.92); }
-        25% { opacity: 1; }
-        100% { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      .dailyapp-insufficient {
-        color: #ff9b9b;
-        font-size: 13px;
-        line-height: 1.5;
-        margin: -8px 0 17px;
-      }
-
-      @media (max-width: 420px) {
-        #dailyapp-reward-modal {
-          padding: 20px;
-          border-radius: 19px;
-        }
-
-        .dailyapp-modal-title {
-          font-size: 22px;
-        }
-
-        .dailyapp-modal-actions {
-          flex-direction: column-reverse;
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          scroll-behavior: auto !important;
-          animation-duration: .01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: .01ms !important;
-        }
-
-        body::before {
-          transition: none !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function animateNumber(selector, targetValue) {
-    var el = $(selector);
-    if (!el) return;
-
-    var target = Number(targetValue);
-
-    if (!Number.isFinite(target)) {
-      el.textContent = String(targetValue);
-      return;
-    }
-
-    target = Math.trunc(target);
-
-    if (prefersReducedMotion()) {
-      el.textContent = target.toLocaleString("de-AT");
-      el.setAttribute("data-animated-value", String(target));
-      return;
-    }
-
-    var oldValue = el.getAttribute("data-animated-value");
-
-    if (oldValue === null) {
-      var parsed = Number(String(el.textContent).replace(/[^\d-]/g, ""));
-      oldValue = Number.isFinite(parsed) ? parsed : target;
-    } else {
-      oldValue = Number(oldValue);
-    }
-
-    if (!Number.isFinite(oldValue)) oldValue = target;
-
-    if (animationFrameIds[selector]) {
-      cancelAnimationFrame(animationFrameIds[selector]);
-    }
-
-    if (oldValue === target) {
-      el.textContent = target.toLocaleString("de-AT");
-      el.setAttribute("data-animated-value", String(target));
-      return;
-    }
-
-    var start = performance.now();
-    var difference = target - oldValue;
-    var duration = Math.min(
-      800,
-      Math.max(260, Math.abs(difference) * 1.4)
-    );
-
-    el.classList.remove("dailyapp-number-pop");
-    void el.offsetWidth;
-    el.classList.add("dailyapp-number-pop");
-
-    function step(now) {
-      var progress = Math.min(1, (now - start) / duration);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      var current = Math.round(oldValue + difference * eased);
-
-      el.textContent = current.toLocaleString("de-AT");
-
-      if (progress < 1) {
-        animationFrameIds[selector] = requestAnimationFrame(step);
-      } else {
-        el.textContent = target.toLocaleString("de-AT");
-        el.setAttribute("data-animated-value", String(target));
-        delete animationFrameIds[selector];
-      }
-    }
-
-    animationFrameIds[selector] = requestAnimationFrame(step);
-  }
-
-  function toast(message) {
-    var el = $("#toast");
-
-    if (!el) {
-      console.log(message);
-      return;
-    }
-
-    el.textContent = message;
-    el.classList.add("show");
-
-    if (toastTimer) clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(function () {
-      el.classList.remove("show");
-    }, 2600);
-  }
-
-  function copy(value) {
-    return JSON.parse(JSON.stringify(value));
-  }
-
-  function clampNumber(value, min, max, fallback) {
-    var number = Number(value);
-    if (!Number.isFinite(number)) return fallback;
-
-    return Math.max(min, Math.min(max, number));
-  }
-
-  function defaultState() {
-    return {
-      version: 3,
-      tasks: [],
-      categories: copy(DEFAULT_CATEGORIES),
-      dailyPlans: {},
-      bonusCompleted: 0,
-      focusSessions: 0,
-      unlocked: [],
-      achievementRewardsClaimed: [],
-      coins: 0,
-      lastDailyRewardDate: "",
-      coinTransactions: [],
-      rewards: copy(DEFAULT_REWARDS),
-      shopHistory: []
-    };
-  }
-
-  function normalizeTask(task, categoryIds, fallbackCategory) {
-    var item = {
-      id: String(task.id || makeId()).slice(0, 100),
-      text: String(task.text || "Task").slice(0, 120),
-      created: isDateKey(task.created) ? task.created : todayKey(),
-      done: Boolean(task.done),
-      completedAt: isDateKey(task.completedAt)
-        ? task.completedAt
-        : null,
-      category: categoryIds.indexOf(
-        String(task.category || "daily")
-      ) >= 0
-        ? String(task.category || "daily")
-        : fallbackCategory,
-      kind: String(task.kind || "custom").slice(0, 30)
-    };
-
-    if (isDateKey(task.day)) item.day = task.day;
-
-    if (task.xpReward !== undefined &&
-        Number.isFinite(Number(task.xpReward))) {
-      item.xpReward = clampNumber(task.xpReward, 0, 1000, 10);
-    }
-
-    if (task.coinReward !== undefined &&
-        Number.isFinite(Number(task.coinReward))) {
-      item.coinReward = clampNumber(task.coinReward, 0, 1000, 0);
-    }
-
-    item.rewardClaimed = task.rewardClaimed === undefined
-      ? Boolean(task.done)
-      : Boolean(task.rewardClaimed);
-
-    return item;
-  }
-
-  function normalizeReward(reward) {
-    if (!reward || typeof reward !== "object") return null;
-
-    var id = String(reward.id || makeId()).slice(0, 100);
-    var name = String(reward.name || "").trim().slice(0, 50);
-
-    if (!name) return null;
-
-    return {
-      id: id,
-      name: name,
-      description: String(
-        reward.description || "Eigene Freizeit-Belohnung"
-      ).slice(0, 160),
-      minutes: clampNumber(reward.minutes, 5, 480, 30),
-      cost: clampNumber(reward.cost, 1, MAX_REWARD_COST, 60),
-      icon: String(reward.icon || "✨").slice(0, 8),
-      custom: Boolean(reward.custom)
-    };
-  }
-
-  function normalizeTransaction(item) {
-    if (!item || typeof item !== "object") return null;
-
-    var amount = Number(item.amount);
-
-    if (!Number.isFinite(amount) ||
-        Math.abs(amount) > MAX_COINS) {
-      return null;
-    }
-
-    return {
-      id: String(item.id || makeId()).slice(0, 100),
-      type: String(item.type || "unknown").slice(0, 30),
-      amount: Math.trunc(amount),
-      description: String(item.description || "").slice(0, 160),
-      date: isDateKey(item.date) ? item.date : todayKey(),
-      createdAt: String(item.createdAt || "").slice(0, 40)
-    };
-  }
-
-  function loadState() {
-    var raw;
-
-    try {
-      raw = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "null"
-      );
-    } catch (error) {
-      console.warn("Could not load DailyApp data:", error);
-      return defaultState();
-    }
-
-    if (!raw || typeof raw !== "object") {
-      return defaultState();
-    }
-
-    var categories =
-      Array.isArray(raw.categories) && raw.categories.length
-        ? raw.categories
-        : copy(DEFAULT_CATEGORIES);
-
-    categories = categories
-      .filter(function (item) {
-        return item && typeof item === "object";
-      })
-      .slice(0, 50)
-      .map(function (item) {
-        return {
-          id: String(item.id || makeId()).slice(0, 100),
-          name: String(item.name || "Category").slice(0, 30),
-          xp: clampNumber(item.xp, 1, 1000, 10)
-        };
-      });
-
-    if (!categories.length) {
-      categories = copy(DEFAULT_CATEGORIES);
-    }
-
-    var categoryIds = categories.map(function (item) {
-      return item.id;
-    });
-
-    var tasks = Array.isArray(raw.tasks) ? raw.tasks : [];
-
-    tasks = tasks
-      .filter(function (task) {
-        return task && typeof task === "object";
-      })
-      .slice(0, 10000)
-      .map(function (task) {
-        return normalizeTask(task, categoryIds, categories[0].id);
-      });
-
-    var plans = {};
-
-    if (raw.dailyPlans && typeof raw.dailyPlans === "object") {
-      Object.keys(raw.dailyPlans).slice(-500).forEach(function (key) {
-        var plan = raw.dailyPlans[key];
-
-        if (!isDateKey(key) ||
-            !plan ||
-            typeof plan !== "object" ||
-            !Array.isArray(plan.taskTexts)) {
-          return;
-        }
-
-        plans[key] = {
-          goal: clampNumber(plan.goal, 0, 10000, 80),
-          taskTexts: plan.taskTexts
-            .filter(function (text) {
-              return typeof text === "string";
-            })
-            .slice(0, 10)
-            .map(function (text) {
-              return text.slice(0, 120);
-            })
-        };
-      });
-    }
-
-    var rewards = Array.isArray(raw.rewards)
-      ? raw.rewards.map(normalizeReward).filter(Boolean).slice(0, 100)
-      : copy(DEFAULT_REWARDS);
-
-    if (!rewards.length) rewards = copy(DEFAULT_REWARDS);
-
-    var transactions = Array.isArray(raw.coinTransactions)
-      ? raw.coinTransactions
-          .map(normalizeTransaction)
-          .filter(Boolean)
-          .slice(-500)
-      : [];
-
-    var history = Array.isArray(raw.shopHistory)
-      ? raw.shopHistory
-          .filter(function (item) {
-            return item && typeof item === "object";
-          })
-          .slice(-200)
-          .map(function (item) {
-            return {
-              id: String(item.id || makeId()).slice(0, 100),
-              rewardId: String(item.rewardId || "").slice(0, 100),
-              name: String(item.name || "Reward").slice(0, 80),
-              minutes: clampNumber(item.minutes, 0, 480, 0),
-              cost: clampNumber(item.cost, 0, MAX_REWARD_COST, 0),
-              date: isDateKey(item.date) ? item.date : todayKey(),
-              createdAt: String(item.createdAt || "").slice(0, 40)
-            };
-          })
-      : [];
-
-    return {
-      version: 3,
-      tasks: tasks,
-      categories: categories,
-      dailyPlans: plans,
-      bonusCompleted: clampNumber(raw.bonusCompleted, 0, 1000000, 0),
-      focusSessions: clampNumber(raw.focusSessions, 0, 1000000, 0),
-      unlocked: Array.isArray(raw.unlocked)
-        ? raw.unlocked.filter(function (id) {
-            return typeof id === "string";
-          }).slice(0, 100)
-        : [],
-      achievementRewardsClaimed:
-        Array.isArray(raw.achievementRewardsClaimed)
-          ? raw.achievementRewardsClaimed.filter(function (id) {
-              return typeof id === "string";
-            }).slice(0, 100)
-          : (Array.isArray(raw.unlocked) ? raw.unlocked.slice(0, 100) : []),
-      coins: clampNumber(raw.coins, 0, MAX_COINS, 0),
-      lastDailyRewardDate: isDateKey(raw.lastDailyRewardDate)
-        ? raw.lastDailyRewardDate
-        : "",
-      coinTransactions: transactions,
-      rewards: rewards,
-      shopHistory: history
-    };
-  }
-
-  function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.warn("Could not save DailyApp data:", error);
-      toast("Daten konnten nicht gespeichert werden.");
-    }
-  }
-
-  function loadAppearance() {
-    try {
-      var saved = JSON.parse(
-        localStorage.getItem(SETTINGS_KEY) || "null"
-      );
-
-      if (saved && typeof saved === "object") {
-        return {
-          theme: ["dark", "light", "system", "auto"].indexOf(
-            saved.theme
-          ) >= 0 ? saved.theme : "dark",
-          accent: saved.accent === "mint"
-            ? "toxic"
-            : (
-              Object.prototype.hasOwnProperty.call(ACCENTS, saved.accent)
-                ? saved.accent
-                : "toxic"
-            )
-        };
-      }
-    } catch (error) {
-      // Use defaults.
-    }
-
-    return { theme: "dark", accent: "toxic" };
-  }
-
-  function actualTheme() {
-    if (appearance.theme === "system" ||
-        appearance.theme === "auto") {
-      return window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-    }
-
-    return appearance.theme;
-  }
-
-  function applyAppearance() {
-    var root = document.documentElement;
-    var accent = ACCENTS[appearance.accent] || ACCENTS.toxic;
-
-    root.setAttribute("data-theme", actualTheme());
-    root.setAttribute("data-accent", appearance.accent);
-
-    root.style.setProperty("--accent", accent[0]);
-    root.style.setProperty("--accent-rgb", accent[1]);
-    root.style.setProperty("--toxic", accent[0]);
-    root.style.setProperty("--toxic-bright", accent[0]);
-    root.style.setProperty("--toxic-rgb", accent[1]);
-    root.style.setProperty("--border", "rgba(" + accent[1] + ", .20)");
-
-    var themeColor = $("#theme-color");
-
-    if (themeColor) {
-      themeColor.setAttribute(
-        "content",
-        actualTheme() === "dark" ? "#050605" : "#f4f6f3"
-      );
-    }
-
-    var themeSelect = $("#theme-select");
-
-    if (themeSelect) {
-      themeSelect.value =
-        appearance.theme === "auto" ? "system" : appearance.theme;
-    }
-
-    var accentContainer = $("#accent-options");
-
-    if (accentContainer &&
-        !accentContainer.getAttribute("data-built")) {
-      accentContainer.innerHTML =
-        Object.keys(ACCENTS).map(function (name) {
-          return (
-            '<button type="button" class="accent-swatch" ' +
-            'data-accent="' + name + '" ' +
-            'aria-label="' + name + ' accent color" ' +
-            'title="' + name + '" ' +
-            'style="background:' + ACCENTS[name][0] + '"></button>'
-          );
-        }).join("");
-
-      accentContainer.setAttribute("data-built", "yes");
-    }
-
-    $$("#accent-options button[data-accent]").forEach(function (button) {
-      var selected =
-        button.getAttribute("data-accent") === appearance.accent;
-
-      button.classList.toggle("active", selected);
-      button.setAttribute("aria-pressed", String(selected));
-    });
-  }
-
-  function saveAppearance() {
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(appearance));
-    } catch (error) {
-      console.warn("Could not save settings:", error);
-    }
-
-    applyAppearance();
-  }
-
-  function getCategory(id) {
-    return state.categories.find(function (item) {
-      return item.id === id;
-    }) || state.categories[0] || DEFAULT_CATEGORIES[0];
-  }
-
-  function taskXP(task) {
-    if (task.xpReward !== undefined &&
-        Number.isFinite(Number(task.xpReward))) {
-      return clampNumber(task.xpReward, 0, 1000, 0);
-    }
-
-    return getCategory(task.category).xp;
-  }
-
-  function taskCoins(task) {
-    if (task.coinReward !== undefined &&
-        Number.isFinite(Number(task.coinReward))) {
-      return clampNumber(task.coinReward, 0, 1000, 0);
-    }
-
-    return Math.max(1, Math.min(25, Math.ceil(taskXP(task) / 2)));
-  }
-
-  function completedTasks() {
-    return state.tasks.filter(function (task) {
-      return task.done;
-    });
-  }
-
-  function totalXP() {
-    return completedTasks().reduce(function (sum, task) {
-      return sum + taskXP(task);
-    }, 0);
-  }
-
-  function levelInfo(xp) {
-    var safe = Math.max(0, xp);
-
-    return {
-      level: Math.floor(safe / 100) + 1,
-      inside: safe % 100
-    };
-  }
-
-  function addCoins(amount, type, description) {
-    amount = Math.trunc(Number(amount));
-
-    if (!Number.isFinite(amount) || amount <= 0) return false;
-
-    var credited = Math.min(amount, MAX_COINS - state.coins);
-
-    if (credited <= 0) {
-      toast("Dein Coin-Limit ist erreicht.");
-      return false;
-    }
-
-    state.coins += credited;
-
-    state.coinTransactions.push({
-      id: makeId(),
-      type: String(type || "reward"),
-      amount: credited,
-      description: String(description || "Coins erhalten").slice(0, 160),
-      date: todayKey(),
-      createdAt: new Date().toISOString()
-    });
-
-    state.coinTransactions = state.coinTransactions.slice(-500);
-    return true;
-  }
-
-  function awardDailyCoins() {
-    var today = todayKey();
-
-    if (state.lastDailyRewardDate === today) return false;
-
-    state.lastDailyRewardDate = today;
-
-    var added = addCoins(
-      DAILY_COINS,
-      "daily-bonus",
-      "Täglicher Login-Bonus"
-    );
-
-    save();
-
-    if (added) toast("Tagesbonus: +" + DAILY_COINS + " Coins!");
-
-    return added;
-  }
-
-  function getPlan(day) {
-    day = day || todayKey();
-
-    var plan = state.dailyPlans[day];
-
-    if (!plan ||
-        typeof plan !== "object" ||
-        !Array.isArray(plan.taskTexts) ||
-        !plan.taskTexts.length) {
-      var pool = TASK_POOL.slice();
-      var chosen = [];
-      var amount = 4 + Math.floor(Math.random() * 2);
-
-      while (chosen.length < amount && pool.length) {
-        chosen.push(
-          pool.splice(Math.floor(Math.random() * pool.length), 1)[0]
-        );
-      }
-
-      var goals = [60, 70, 80, 90, 100, 110, 120, 140];
-
-      plan = {
-        goal: goals[Math.floor(Math.random() * goals.length)],
-        taskTexts: chosen
-      };
-
-      state.dailyPlans[day] = plan;
-      save();
-    }
-
-    return plan;
-  }
-
-  function ensureDailyTasks(day) {
-    day = day || todayKey();
-
-    getPlan(day).taskTexts.forEach(function (text) {
-      var exists = state.tasks.some(function (task) {
-        return task.kind === "daily-plan" &&
-          task.day === day &&
-          task.text === text;
-      });
-
-      if (!exists) {
-        state.tasks.push({
-          id: makeId(),
-          text: text,
-          created: day,
-          done: false,
-          completedAt: null,
-          category: "daily",
-          kind: "daily-plan",
-          day: day,
-          xpReward: 10,
-          coinReward: 5,
-          rewardClaimed: false
-        });
-      }
-    });
-
-    save();
-  }
-
-  function tasksForToday() {
-    var today = todayKey();
-
-    return state.tasks.filter(function (task) {
-      return task.created === today ||
-        (task.kind === "daily-plan" && task.day === today);
-    });
-  }
-
-  function streakInfo() {
-    var days = {};
-
-    completedTasks().forEach(function (task) {
-      if (task.completedAt) days[task.completedAt] = true;
-    });
-
-    var date = new Date();
-    var key = dateKey(date);
-
-    if (!days[key]) {
-      date = shiftDate(date, -1);
-      key = dateKey(date);
-    }
-
-    var current = 0;
-
-    while (days[key]) {
-      current++;
-      date = shiftDate(date, -1);
-      key = dateKey(date);
-    }
-
-    var sorted = Object.keys(days).sort();
-    var best = 0;
-    var run = 0;
-    var previous = null;
-
-    sorted.forEach(function (day) {
-      var parsed = parseDate(day);
-
-      if (previous) {
-        var diff = Math.round(
-          (parsed.getTime() - previous.getTime()) / 86400000
-        );
-
-        run = diff === 1 ? run + 1 : 1;
-      } else {
-        run = 1;
-      }
-
-      best = Math.max(best, run);
-      previous = parsed;
-    });
-
-    return { current: current, best: best };
-  }
-
-  function weekKeys(reference) {
-    var start = new Date(reference || new Date());
-
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-
-    var result = [];
-
-    for (var i = 0; i < 7; i++) {
-      result.push(dateKey(shiftDate(start, i)));
-    }
-
-    return result;
-  }
-
-  function countDoneBetween(start, end) {
-    return state.tasks.filter(function (task) {
-      return task.done && task.completedAt &&
-        task.completedAt >= start && task.completedAt <= end;
-    }).length;
-  }
-
-  function xpBetween(start, end) {
-    return state.tasks.filter(function (task) {
-      return task.done && task.completedAt &&
-        task.completedAt >= start && task.completedAt <= end;
-    }).reduce(function (sum, task) {
-      return sum + taskXP(task);
-    }, 0);
-  }
-
-  function taskHTML(task, allowDelete) {
-    var cat = getCategory(task.category);
-
-    var status = task.done
-      ? (task.completedAt ? "Erledigt " + task.completedAt : "Erledigt")
-      : (task.created === todayKey()
-          ? "Heute hinzugefügt"
-          : "Hinzugefügt " + task.created);
-
-    var html =
-      '<article class="task-card ' + (task.done ? "done" : "") + '">';
-
-    html +=
-      '<button type="button" class="task-check" ' +
-      'data-toggle="' + escapeHTML(task.id) + '" ' +
-      'aria-label="' + (task.done ? "Wieder öffnen" : "Aufgabe erledigen") +
-      '" aria-pressed="' + String(task.done) + '">' +
-      (task.done ? "✓" : "") + '</button>';
-
-    html +=
-      '<div class="task-copy">' +
-      '<div class="task-title">' + escapeHTML(task.text) + '</div>' +
-      '<div class="task-sub">' + escapeHTML(cat.name) + ' · ' +
-      escapeHTML(status) + '</div></div>';
-
-    html += '<span class="task-xp">+' + taskXP(task) + ' XP</span>';
-
-    if (allowDelete) {
-      html +=
-        '<button type="button" class="delete-task" ' +
-        'data-delete="' + escapeHTML(task.id) + '" ' +
-        'aria-label="Aufgabe löschen">×</button>';
-    }
-
-    return html + '</article>';
-  }
-
-  function renderHome() {
-    var tasks = tasksForToday();
-
-    var done = tasks.filter(function (task) {
-      return task.done;
-    }).length;
-
-    var percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
-    var level = levelInfo(totalXP());
-    var dateEl = $("#home-date");
-
-    if (dateEl) {
-      dateEl.textContent = new Date().toLocaleDateString(
-        "de-AT",
-        { day: "numeric", month: "short" }
-      );
-    }
-
-    setText(
-      "#today-label",
-      "DEIN TAG · " +
-      new Date().toLocaleDateString(
-        "de-AT",
-        { weekday: "long" }
-      ).toUpperCase()
-    );
-
-    setText("#daily-progress-text", done + " von " + tasks.length + " erledigt");
-    setText("#daily-progress-percent", percent + "%");
-    setWidth("#daily-progress-fill", percent);
-
-    animateNumber("#home-xp", totalXP());
-    setText("#home-level", "Level " + level.level);
-    setText("#home-streak", streakInfo().current + " Tage");
-    animateNumber("#home-coins", state.coins);
-
-    setText("#daily-coin-bonus",
-      state.lastDailyRewardDate === todayKey()
-        ? "✓ Heute erhalten"
-        : "+50 Coins verfügbar");
-
-    var homeList = $("#home-tasks");
-
-    if (homeList) {
-      homeList.innerHTML = tasks.length
-        ? tasks.slice(0, 5).map(function (task) {
-            return taskHTML(task, false);
-          }).join("")
-        : '<div class="empty-state">Keine Aufgaben für heute.</div>';
-    }
-  }
-
-  function renderTaskList() {
-    var list = $("#task-lists");
-    if (!list) return;
-
-    var tasks = state.tasks.slice().sort(function (a, b) {
-      if (a.done !== b.done) return a.done ? 1 : -1;
-      return String(b.created).localeCompare(String(a.created));
-    }).filter(function (task) {
-      if (currentFilter === "open") return !task.done;
-      if (currentFilter === "done") return task.done;
-      return true;
-    });
-
-    list.innerHTML = tasks.length
-      ? tasks.map(function (task) {
-          return taskHTML(task, true);
-        }).join("")
-      : '<div class="empty-state">Keine Aufgaben in dieser Ansicht. Erstelle oben eine neue Aufgabe.</div>';
-  }
-
-  function renderCategories() {
-    var select = $("#task-category");
-
-    if (select) {
-      var previous = select.value;
-
-      select.innerHTML = state.categories.map(function (item) {
-        return '<option value="' + escapeHTML(item.id) + '">' +
-          escapeHTML(item.name) + ' · ' + item.xp + ' XP</option>';
-      }).join("");
-
-      if (state.categories.some(function (item) {
-        return item.id === previous;
-      })) {
-        select.value = previous;
-      }
-    }
-
-    var list = $("#category-list");
-
-    if (list) {
-      list.innerHTML = state.categories.map(function (item) {
-        var isDefault = DEFAULT_CATEGORIES.some(function (base) {
-          return base.id === item.id;
-        });
-
-        return '<div class="category-row"><div><strong>' +
-          escapeHTML(item.name) + '</strong><small>' +
-          item.xp + ' XP pro Aufgabe</small></div>' +
-          (isDefault ? "" :
-            '<button type="button" class="delete-task" data-delete-cat="' +
-            escapeHTML(item.id) +
-            '" aria-label="Kategorie löschen">×</button>') +
-          '</div>';
-      }).join("");
-    }
-  }
-
-  function renderCalendar() {
-    var label = $("#calendar-month");
-
-    if (label) {
-      label.textContent = calendarCursor.toLocaleDateString(
-        "de-AT",
-        { month: "long", year: "numeric" }
-      );
-    }
-
-    var grid = $("#calendar-days");
-
-    if (grid) {
-      var year = calendarCursor.getFullYear();
-      var month = calendarCursor.getMonth();
-      var offset = (new Date(year, month, 1).getDay() + 6) % 7;
-      var numberDays = new Date(year, month + 1, 0).getDate();
-      var html = "";
-
-      for (var i = 0; i < offset; i++) {
-        html += '<span aria-hidden="true"></span>';
-      }
-
-      for (var day = 1; day <= numberDays; day++) {
-        var key = dateKey(new Date(year, month, day));
-
-        var has = state.tasks.some(function (task) {
-          return task.created === key || task.completedAt === key;
-        });
-
-        var classes = "calendar-day" +
-          (key === todayKey() ? " today" : "") +
-          (key === selectedDate ? " selected" : "") +
-          (has ? " has-activity" : "");
-
-        html += '<button type="button" class="' + classes +
-          '" data-date="' + key + '" aria-pressed="' +
-          String(key === selectedDate) + '">' + day + '</button>';
-      }
-
-      grid.innerHTML = html;
-    }
-
-    var title = $("#selected-date-title");
-
-    if (title) {
-      title.textContent = parseDate(selectedDate).toLocaleDateString(
-        "de-AT",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      );
-    }
-
-    var dayList = $("#calendar-tasks");
-
-    if (dayList) {
-      var selected = state.tasks.filter(function (task) {
-        return task.created === selectedDate ||
-          task.completedAt === selectedDate;
-      });
-
-      dayList.innerHTML = selected.length
-        ? selected.map(function (task) {
-            return taskHTML(task, false);
-          }).join("")
-        : '<div class="empty-state">Für diesen Tag sind keine Aufgaben gespeichert.</div>';
-    }
-  }
-
-  function renderHeatmap() {
-    var grid = $("#activity-heatmap");
-    if (!grid) return;
-
-    var counts = {};
-
-    completedTasks().forEach(function (task) {
-      if (task.completedAt) {
-        counts[task.completedAt] = (counts[task.completedAt] || 0) + 1;
-      }
-    });
-
-    var today = parseDate(todayKey());
-    var start = shiftDate(today, -363);
-
-    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-
-    var html = "";
-    var total = 371;
-
-    for (var i = 0; i < total; i++) {
-      var date = shiftDate(start, i);
-      var key = dateKey(date);
-      var count = counts[key] || 0;
-
-      var level = count === 0 ? 0
-        : count === 1 ? 1
-        : count === 2 ? 2
-        : count <= 4 ? 3
-        : 4;
-
-      if (date > today) level = 0;
-
-      html += '<div class="heat-cell heat-' + level +
-        '" title="' + key + ': ' + count +
-        ' erledigte Aufgabe(n)" aria-label="' +
-        key + ': ' + count + '"></div>';
-    }
-
-    grid.innerHTML = html;
-
-    var monthEl = $("#heatmap-months");
-
-    if (monthEl) {
-      var labels = [];
-      var lastMonth = -1;
-
-      for (var j = 0; j < total; j++) {
-        var d = shiftDate(start, j);
-
-        if (d.getMonth() !== lastMonth) {
-          labels.push(d.toLocaleDateString("de-AT", { month: "short" }));
-          lastMonth = d.getMonth();
-        }
-      }
-
-      monthEl.innerHTML = labels.map(function (name) {
-        return "<span>" + escapeHTML(name) + "</span>";
-      }).join("");
-    }
-
-    var summary = $("#heatmap-summary");
-
-    if (summary) {
-      summary.textContent = completedTasks().filter(function (task) {
-        return task.completedAt &&
-          task.completedAt >= dateKey(shiftDate(today, -364));
-      }).length + " Aufgaben in den letzten 12 Monaten erledigt.";
-    }
-  }
-
-  function renderProgress() {
-    var xp = totalXP();
-    var info = levelInfo(xp);
-    var done = completedTasks().length;
-    var total = state.tasks.length;
-    var streak = streakInfo();
-
-    setText("#progress-level", "Level " + info.level);
-    setText("#level-orb", info.level);
-    setText(
-      "#progress-title",
-      info.level < 3 ? "Getting started" :
-        info.level < 6 ? "Building momentum" :
-          "Consistency builder"
-    );
-
-    setWidth("#level-progress-fill", info.inside);
-    setText("#level-xp-text", info.inside + " / 100 XP");
-    setText("#level-next",
-      (100 - info.inside) + " XP bis Level " + (info.level + 1));
-    setText("#progress-done", done);
-    setText("#progress-rate",
-      (total ? Math.round(done / total * 100) : 0) + "%");
-    setText("#progress-focus", state.focusSessions || 0);
-
-    if (!Array.isArray(state.unlocked)) state.unlocked = [];
-
-    if (!Array.isArray(state.achievementRewardsClaimed)) {
-      state.achievementRewardsClaimed = state.unlocked.slice();
-    }
-
-    var finished = completedTasks();
-
-    var customCategories = state.categories.filter(function (cat) {
-      return !DEFAULT_CATEGORIES.some(function (base) {
-        return base.id === cat.id;
-      });
-    });
-
-    var earnedCoins = state.coinTransactions.reduce(function (sum, tx) {
-      return sum + Math.max(0, Number(tx.amount) || 0);
-    }, 0);
-
-    var activeDays = {};
-
-    finished.forEach(function (task) {
-      if (task.completedAt) activeDays[task.completedAt] = true;
-    });
-
-    var weekendCount = finished.filter(function (task) {
-      if (!task.completedAt) return false;
-      var day = parseDate(task.completedAt).getDay();
-      return day === 0 || day === 6;
-    }).length;
-
-    var categoriesUsed = DEFAULT_CATEGORIES.filter(function (cat) {
-      return finished.some(function (task) {
-        return task.category === cat.id;
-      });
-    }).length;
-
-    var todayTasks = tasksForToday();
-
-    var todayDone = todayTasks.filter(function (task) {
-      return task.done;
-    }).length;
-
-    var dailyDone = finished.filter(function (task) {
-      return task.kind === "daily-plan";
-    }).length;
-
-    var achievements = [];
-
-    function addAchievement(item) {
-      item.progress = Math.max(0, Number(item.progress) || 0);
-      item.target = Math.max(1, Number(item.target) || 1);
-      item.reward = Math.max(0, Number(item.reward) || 0);
-      item.done = item.done === true || item.progress >= item.target;
-      item.secret = item.secret === true;
-      item.rarity = item.rarity || "common";
-      achievements.push(item);
-    }
-
-    function addMilestones(config) {
-      config.targets.forEach(function (target, index) {
-        var id = config.prefix + target;
-
-        if (config.prefix === "tasks-" && target === 1) id = "first";
-        if (config.prefix === "tasks-" && target === 5) id = "five";
-        if (config.prefix === "tasks-" && target === 25) id = "twentyfive";
-        if (config.prefix === "tasks-" && target === 100) id = "hundred";
-        if (config.prefix === "xp-" && target === 100) id = "xp100";
-        if (config.prefix === "xp-" && target === 1000) id = "xp1000";
-        if (config.prefix === "streak-" && target === 3) id = "streak3";
-        if (config.prefix === "streak-" && target === 7) id = "streak7";
-        if (config.prefix === "focus-" && target === 1) id = "focus";
-        if (config.prefix === "category-" && target === 1) id = "category";
-
-        var rarity = index >= 12 ? "legendary"
-          : index >= 9 ? "epic"
-          : index >= 5 ? "rare"
-          : index >= 2 ? "uncommon"
-          : "common";
-
-        addAchievement({
-          id: id,
-          icon: config.icon,
-          name: config.name(target),
-          desc: config.description(target),
-          progress: config.value(),
-          target: target,
-          rarity: rarity,
-          reward: config.rewards && config.rewards[index] ||
-            (index >= 12 ? 1000 : index >= 9 ? 500 :
-              index >= 5 ? 200 : index >= 2 ? 75 : 25)
-        });
-      });
-    }
-
-    addMilestones({
-      prefix: "tasks-",
-      icon: "🏆",
-      targets: [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500,
-        5000, 10000, 25000, 50000, 100000],
-      value: function () { return done; },
-      name: function (n) {
-        return n === 1 ? "First Step" : n.toLocaleString("de-AT") + " Tasks";
-      },
-      description: function (n) {
-        return "Erledige " + n.toLocaleString("de-AT") + " Aufgaben.";
-      },
-      rewards: [10, 20, 30, 50, 75, 100, 150, 250, 400, 600,
-        800, 1000, 1500, 2000, 2500]
-    });
-
-    addMilestones({
-      prefix: "xp-",
-      icon: "✨",
-      targets: [100, 250, 500, 1000, 2500, 5000, 10000, 25000,
-        50000, 100000, 250000, 500000, 1000000, 2500000, 5000000],
-      value: function () { return xp; },
-      name: function (n) { return n.toLocaleString("de-AT") + " XP"; },
-      description: function (n) {
-        return "Sammle insgesamt " + n.toLocaleString("de-AT") + " XP.";
-      }
-    });
-
-    addMilestones({
-      prefix: "streak-",
-      icon: "🔥",
-      targets: [2, 3, 5, 7, 10, 14, 21, 30, 60, 100],
-      value: function () { return streak.best; },
-      name: function (n) { return n + "-Day Streak"; },
-      description: function (n) {
-        return "Erreiche eine Serie von " + n + " aktiven Tagen.";
-      }
-    });
-
-    addMilestones({
-      prefix: "focus-",
-      icon: "⏱️",
-      targets: [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500],
-      value: function () { return state.focusSessions || 0; },
-      name: function (n) { return n + " Focus Sessions"; },
-      description: function (n) {
-        return "Schließe " + n + " Fokus-Sessions ab.";
-      }
-    });
-
-    addMilestones({
-      prefix: "coins-",
-      icon: "🪙",
-      targets: [100, 500, 1000, 2500, 5000, 10000, 25000,
-        50000, 100000, 1000000],
-      value: function () { return earnedCoins; },
-      name: function (n) {
-        return n.toLocaleString("de-AT") + " Coins Earned";
-      },
-      description: function (n) {
-        return "Verdiene insgesamt " + n.toLocaleString("de-AT") + " Coins.";
-      }
-    });
-
-    addMilestones({
-      prefix: "shop-",
-      icon: "🎁",
-      targets: [1, 3, 5, 10, 25, 50, 100, 250, 500, 1000],
-      value: function () { return state.shopHistory.length; },
-      name: function (n) { return n + " Shop Rewards"; },
-      description: function (n) {
-        return "Löse " + n + " Rewards im Shop ein.";
-      }
-    });
-
-    addMilestones({
-      prefix: "category-",
-      icon: "🛠️",
-      targets: [1, 2, 3, 5, 10, 15, 20, 25, 30, 40],
-      value: function () { return customCategories.length; },
-      name: function (n) { return n + " Custom Categories"; },
-      description: function (n) {
-        return "Erstelle " + n + " eigene Kategorien.";
-      }
-    });
-
-    addMilestones({
-      prefix: "dailyplan-",
-      icon: "📅",
-      targets: [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500],
-      value: function () { return dailyDone; },
-      name: function (n) { return n + " Daily Tasks"; },
-      description: function (n) {
-        return "Erledige " + n + " Aufgaben aus deinem Tagesplan.";
-      }
-    });
-
-    [
-      {
-        id: "special-perfect-day",
-        icon: "🌟",
-        name: "Perfect Day",
-        desc: "Erledige alle heutigen Aufgaben.",
-        progress: todayTasks.length > 0 && todayDone === todayTasks.length ? 1 : 0,
-        target: 1, reward: 150, rarity: "epic"
-      },
-      {
-        id: "special-active-days",
-        icon: "🗓️",
-        name: "Active Week",
-        desc: "Sei an mindestens 7 verschiedenen Tagen aktiv.",
-        progress: Object.keys(activeDays).length,
-        target: 7, reward: 100, rarity: "rare"
-      },
-      {
-        id: "special-weekend",
-        icon: "🌈",
-        name: "Weekend Warrior",
-        desc: "Erledige 10 Aufgaben am Wochenende.",
-        progress: weekendCount,
-        target: 10, reward: 200, rarity: "epic"
-      },
-      {
-        id: "special-all-categories",
-        icon: "🧠",
-        name: "All-Rounder",
-        desc: "Erledige Aufgaben in allen vier Standard-Kategorien.",
-        progress: categoriesUsed,
-        target: 4, reward: 250, rarity: "legendary"
-      },
-      {
-        id: "special-wallet",
-        icon: "💰",
-        name: "Coin Reserve",
-        desc: "Halte mindestens 1.000 Coins gleichzeitig.",
-        progress: state.coins,
-        target: 1000, reward: 100, rarity: "rare"
-      },
-      {
-        id: "special-task-collection",
-        icon: "📚",
-        name: "Task Collector",
-        desc: "Habe mindestens 50 Aufgaben gespeichert.",
-        progress: state.tasks.length,
-        target: 50, reward: 100, rarity: "rare"
-      },
-      {
-        id: "secret-daily-master",
-        icon: "🌌",
-        name: "Daily Master",
-        desc: "Schließe 100 tägliche Plan-Aufgaben ab.",
-        progress: dailyDone,
-        target: 100, reward: 500, rarity: "secret", secret: true
-      },
-      {
-        id: "secret-five-today",
-        icon: "⚡",
-        name: "Power Day",
-        desc: "Erledige an einem Tag mindestens 5 Aufgaben.",
-        progress: todayDone,
-        target: 5, reward: 200, rarity: "secret", secret: true
-      },
-      {
-        id: "secret-focus-legend",
-        icon: "🧿",
-        name: "Focus Legend",
-        desc: "Schließe 100 Fokus-Sessions ab.",
-        progress: state.focusSessions || 0,
-        target: 100, reward: 500, rarity: "secret", secret: true
-      },
-      {
-        id: "secret-coin-millionaire",
-        icon: "👑",
-        name: "Coin Millionaire",
-        desc: "Verdiene insgesamt 50.000 Coins.",
-        progress: earnedCoins,
-        target: 50000, reward: 1000, rarity: "secret", secret: true
-      }
-    ].forEach(addAchievement);
-
-    var newUnlocks = [];
-
-    achievements.forEach(function (item) {
-      item.done = item.done || item.progress >= item.target;
-
-      if (!item.done) return;
-
-      if (state.unlocked.indexOf(item.id) === -1) {
-        state.unlocked.push(item.id);
-        newUnlocks.push(item);
-      }
-
-      if (state.achievementRewardsClaimed.indexOf(item.id) === -1) {
-        state.achievementRewardsClaimed.push(item.id);
-        addCoins(item.reward, "achievement", "Achievement: " + item.name);
-      }
-    });
-
-    state.unlocked = Array.from(new Set(state.unlocked)).slice(-100);
-    state.achievementRewardsClaimed =
-      Array.from(new Set(state.achievementRewardsClaimed)).slice(-100);
-
-    var achievementGrid = $("#achievements");
-
-    if (achievementGrid) {
-      var rarityNames = {
-        all: "Alle Seltenheiten",
-        common: "Common",
-        uncommon: "Uncommon",
-        rare: "Rare",
-        epic: "Epic",
-        legendary: "Legendary",
-        secret: "Secret"
-      };
-
-      var oldRarity = $("#achievement-rarity-filter");
-      var oldStatus = $("#achievement-status-filter");
-      var rarityFilter = oldRarity ? oldRarity.value : "all";
-      var statusFilter = oldStatus ? oldStatus.value : "all";
-
-      var visible = achievements.filter(function (item) {
-        if (item.secret && !item.done) return false;
-        if (rarityFilter !== "all" && item.rarity !== rarityFilter) return false;
-        if (statusFilter === "unlocked" && !item.done) return false;
-        if (statusFilter === "locked" && item.done) return false;
-        return true;
-      });
-
-      var filters =
-        '<div class="achievement-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' +
-          '<label style="display:flex;flex-direction:column;gap:4px">Seltenheit' +
-            '<select id="achievement-rarity-filter" style="max-width:190px">' +
-              Object.keys(rarityNames).map(function (key) {
-                return '<option value="' + key + '"' +
-                  (rarityFilter === key ? " selected" : "") + ">" +
-                  rarityNames[key] + "</option>";
-              }).join("") +
-            '</select></label>' +
-          '<label style="display:flex;flex-direction:column;gap:4px">Status' +
-            '<select id="achievement-status-filter" style="max-width:190px">' +
-              '<option value="all"' + (statusFilter === "all" ? " selected" : "") + '>Alle sichtbaren</option>' +
-              '<option value="unlocked"' + (statusFilter === "unlocked" ? " selected" : "") + '>Freigeschaltet</option>' +
-              '<option value="locked"' + (statusFilter === "locked" ? " selected" : "") + '>Gesperrt</option>' +
-            '</select></label>' +
-        '</div>';
-
-      var cards = visible.map(function (item) {
-        var percent = Math.min(100, Math.round(item.progress / item.target * 100));
-        var rarityLabel = item.rarity.charAt(0).toUpperCase() +
-          item.rarity.slice(1);
-
-        return '<article class="achievement ' +
-          (item.done ? "unlocked" : "locked") +
-          '" data-rarity="' + escapeHTML(item.rarity) + '">' +
-          '<div class="achievement-icon">' + item.icon + '</div>' +
-          '<h3>' + escapeHTML(item.name) + '</h3>' +
-          '<p>' + escapeHTML(item.desc) + '</p>' +
-          '<div style="height:6px;background:rgba(128,128,128,.2);border-radius:6px;overflow:hidden;margin:10px 0">' +
-            '<div style="height:100%;width:' + percent +
-              '%;background:var(--accent,#b6ff00);transition:width .2s"></div>' +
-          '</div>' +
-          '<small>' + (item.done ? "UNLOCKED" : "LOCKED") +
-            ' · ' + rarityLabel + '</small>' +
-          '<div style="margin-top:6px;font-size:12px">+' +
-            item.reward + ' Coins · ' +
-            Math.min(item.progress, item.target).toLocaleString("de-AT") +
-            ' / ' + item.target.toLocaleString("de-AT") + '</div>' +
-        '</article>';
-      }).join("");
-
-      achievementGrid.innerHTML = filters + cards;
-
-      var raritySelect = $("#achievement-rarity-filter");
-      var statusSelect = $("#achievement-status-filter");
-
-      if (raritySelect) {
-        raritySelect.addEventListener("change", renderProgress);
-      }
-
-      if (statusSelect) {
-        statusSelect.addEventListener("change", renderProgress);
-      }
-
-      var unlockedCount = achievements.filter(function (item) {
-        return item.done;
-      }).length;
-
-      var summary = $("#achievement-summary");
-
-      if (!summary) {
-        summary = document.createElement("p");
-        summary.id = "achievement-summary";
-        summary.className = "muted";
-        achievementGrid.parentNode.insertBefore(summary, achievementGrid);
-      }
-
-      summary.textContent = unlockedCount + " / " + achievements.length +
-        " Achievements freigeschaltet";
-    }
-
-    var weekly = $("#weekly-report");
-
-    if (weekly) {
-      var keys = weekKeys(new Date());
-
-      var weekTasks = state.tasks.filter(function (task) {
-        return task.done && keys.indexOf(task.completedAt) >= 0;
-      });
-
-      var active = {};
-
-      weekTasks.forEach(function (task) {
-        active[task.completedAt] = true;
-      });
-
-      weekly.innerHTML =
-        '<div class="weekly-row"><span>Aufgaben diese Woche</span><strong>' +
-        weekTasks.length + '</strong></div>' +
-        '<div class="weekly-row"><span>XP diese Woche</span><strong>' +
-        weekTasks.reduce(function (sum, task) {
-          return sum + taskXP(task);
-        }, 0) + '</strong></div>' +
-        '<div class="weekly-row"><span>Aktive Tage</span><strong>' +
-        Object.keys(active).length + '/7</strong></div>' +
-        '<div class="weekly-row"><span>Aktuelle Serie</span><strong>' +
-        streak.current + ' Tage</strong></div>' +
-        '<div class="weekly-row"><span>Beste Serie</span><strong>' +
-        streak.best + ' Tage</strong></div>';
-    }
-
-    var recent = $("#recent-activity");
-
-    if (recent) {
-      var activity = finished.slice().sort(function (a, b) {
-        return String(b.completedAt || "").localeCompare(
-          String(a.completedAt || "")
-        );
-      }).slice(0, 8);
-
-      recent.innerHTML = activity.length
-        ? activity.map(function (task) {
-            return taskHTML(task, false);
-          }).join("")
-        : '<div class="empty-state">Erledige eine Aufgabe, um deine Aktivität zu sehen.</div>';
-    }
-
-    save();
-
-    if (newUnlocks.length) {
-      toast(newUnlocks.length === 1
-        ? "Achievement freigeschaltet: " + newUnlocks[0].name +
-          " · +" + newUnlocks[0].reward + " Coins!"
-        : newUnlocks.length + " Achievements freigeschaltet!");
-    }
-  }
-
-  function barHTML(label, value, max) {
-    var height = max > 0 ? Math.max(0, value / max * 100) : 0;
-
-    return '<div class="bar-col" title="' +
-      escapeHTML(label) + ': ' + value +
-      '"><span class="bar-value">' + value +
-      '</span><div class="bar-track"><div class="bar-fill" style="height:' +
-      height + '%"></div></div><span class="bar-label">' +
-      escapeHTML(label) + '</span></div>';
-  }
-
-  function renderAnalytics() {
-    var today = parseDate(todayKey());
-    var start = dateKey(shiftDate(today, -6));
-    var previousStart = dateKey(shiftDate(today, -13));
-    var previousEnd = dateKey(shiftDate(today, -7));
-
-    var thisWeek = countDoneBetween(start, todayKey());
-    var previousWeek = countDoneBetween(previousStart, previousEnd);
-    var xpWeek = xpBetween(start, todayKey());
-
-    var total = state.tasks.length;
-    var done = completedTasks().length;
-    var keys = [];
-
-    for (var i = 6; i >= 0; i--) {
-      keys.push(dateKey(shiftDate(today, -i)));
-    }
-
-    var counts = keys.map(function (key) {
-      return state.tasks.filter(function (task) {
-        return task.done && task.completedAt === key;
-      }).length;
-    });
-
-    var max = Math.max.apply(Math, [1].concat(counts));
-
-    setText("#analytics-week-done", thisWeek);
-    setText("#analytics-week-xp", xpWeek + " XP");
-
-    var activeDays = {};
-
-    state.tasks.forEach(function (task) {
-      if (task.done && keys.indexOf(task.completedAt) >= 0) {
-        activeDays[task.completedAt] = true;
-      }
-    });
-
-    setText("#analytics-active-days", Object.keys(activeDays).length + "/7");
-    setText("#analytics-rate", (total ? Math.round(done / total * 100) : 0) + "%");
-
-    var chart = $("#analytics-week-chart");
-
-    if (chart) {
-      chart.innerHTML = keys.map(function (key, index) {
-        return barHTML(
-          parseDate(key).toLocaleDateString("de-AT", { weekday: "short" }),
-          counts[index],
-          max
-        );
-      }).join("");
-    }
-
-    var comparison = $("#analytics-comparison");
-
-    if (comparison) {
-      var compareMax = Math.max(1, thisWeek, previousWeek);
-
-      comparison.innerHTML =
-        '<div class="compare-metric"><div class="compare-top">' +
-        '<strong>Diese 7 Tage</strong><span>' + thisWeek +
-        ' Aufgaben</span></div><div class="compare-bars">' +
-        '<div class="compare-bar"><span style="width:' +
-        (thisWeek / compareMax * 100) +
-        '%"></span></div></div></div>' +
-        '<div class="compare-metric"><div class="compare-top">' +
-        '<strong>Vorherige 7 Tage</strong><span>' + previousWeek +
-        ' Aufgaben</span></div><div class="compare-bars">' +
-        '<div class="compare-bar previous"><span style="width:' +
-        (previousWeek / compareMax * 100) +
-        '%"></span></div></div></div>';
-    }
-
-    var months = [];
-
-    for (var m = 5; m >= 0; m--) {
-      var monthDate = new Date(today.getFullYear(), today.getMonth() - m, 1);
-      var monthStart = dateKey(monthDate);
-
-      var monthEnd = dateKey(shiftDate(
-        new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1),
-        -1
-      ));
-
-      months.push({
-        label: monthDate.toLocaleDateString("de-AT", { month: "short" }),
-        count: countDoneBetween(monthStart, monthEnd)
-      });
-    }
-
-    var monthMax = Math.max.apply(
-      Math,
-      [1].concat(months.map(function (item) {
-        return item.count;
-      }))
-    );
-
-    var monthChart = $("#analytics-month-chart");
-
-    if (monthChart) {
-      monthChart.innerHTML = months.map(function (item) {
-        return barHTML(item.label, item.count, monthMax);
-      }).join("");
-    }
-
-    var insight = $("#analytics-insights");
-
-    if (insight) {
-      var message = thisWeek > previousWeek
-        ? "Du hast " + (thisWeek - previousWeek) + " Aufgaben mehr erledigt als im Zeitraum davor."
-        : thisWeek < previousWeek
-          ? "Du hast " + (previousWeek - thisWeek) + " Aufgaben weniger erledigt. Das sind Daten, kein Urteil."
-          : "Deine Aufgabenanzahl entspricht dem vorherigen 7-Tage-Zeitraum.";
-
-      insight.innerHTML =
-        '<p class="insight-line">' + escapeHTML(message) + '</p>' +
-        '<p class="insight-line">Insgesamt erledigt: ' + done +
-        ' Aufgaben · ' + totalXP() + ' XP.</p>' +
-        '<p class="insight-line">Beste Serie: ' + streakInfo().best + ' Tage.</p>';
-    }
-  }
-
-  function renderShop() {
-    animateNumber("#shop-coins", state.coins);
-
-    var history = $("#shop-history");
-    if (!history) return;
-
-    if (!state.shopHistory.length) {
-      history.innerHTML = '<p class="muted">Deine eingelösten Rewards erscheinen hier.</p>';
-      return;
-    }
-
-    history.innerHTML = state.shopHistory.slice().reverse().slice(0, 30)
-      .map(function (item) {
-        return '<div class="shop-history-item">' +
-          '<div><strong>' + escapeHTML(item.name) + '</strong>' +
-          '<small>' + escapeHTML(item.date) + ' · ' +
-          item.minutes + ' Minuten Freizeit</small></div>' +
-          '<strong>−' + item.cost + ' ◈</strong></div>';
-      }).join("");
-  }
-
-  function renderAll() {
-    renderCategories();
-    renderHome();
-    renderTaskList();
-    renderCalendar();
-    renderHeatmap();
-    renderProgress();
-    renderAnalytics();
-    renderShop();
-    updateTimerDisplay();
-  }
-
-  function createTask(text, categoryId, kind) {
-    text = String(text || "").trim();
-    if (!text) return;
-
-    var cat = getCategory(categoryId || "daily");
-
-    state.tasks.unshift({
-      id: makeId(),
-      text: text.slice(0, 120),
-      created: todayKey(),
-      done: false,
-      completedAt: null,
-      category: cat.id,
-      kind: kind === "daily" ? "daily-custom" : "custom",
-      xpReward: cat.xp,
-      coinReward: Math.max(1, Math.min(25, Math.ceil(cat.xp / 2))),
-      rewardClaimed: false
-    });
-
-    save();
-    renderAll();
-    toast("Aufgabe hinzugefügt.");
-  }
-
-  function toggleTask(id) {
-    var task = state.tasks.find(function (item) {
-      return item.id === id;
-    });
-
-    if (!task) return;
-
-    if (task.done) {
-      task.done = false;
-      task.completedAt = null;
-      task.rewardClaimed = true;
-
-      save();
-      renderAll();
-      toast("Aufgabe wieder offen. Bereits verdiente Rewards bleiben unverändert.");
-      return;
-    }
-
-    task.done = true;
-    task.completedAt = todayKey();
-
-    var xp = taskXP(task);
-    var coinsEarned = 0;
-
-    if (!task.rewardClaimed) {
-      task.rewardClaimed = true;
-      coinsEarned = taskCoins(task);
-      addCoins(coinsEarned, "task-reward", "Aufgabe: " + task.text);
-    }
-
-    save();
-    renderAll();
-
-    toast(
-      "Aufgabe erledigt · +" + xp + " XP" +
-      (coinsEarned ? " · +" + coinsEarned + " Coins" : "")
-    );
-  }
-
-  function deleteTask(id) {
-    var task = state.tasks.find(function (item) {
-      return item.id === id;
-    });
-
-    if (!task || !window.confirm('Aufgabe "' + task.text + '" löschen?')) {
-      return;
-    }
-
-    state.tasks = state.tasks.filter(function (item) {
-      return item.id !== id;
-    });
-
-    save();
-    renderAll();
-    toast("Aufgabe gelöscht.");
-  }
-
-  function addCategory(name) {
-    name = String(name || "").trim();
-    if (!name) return;
-
-    if (state.categories.some(function (item) {
-      return item.name.toLowerCase() === name.toLowerCase();
-    })) {
-      toast("Diese Kategorie gibt es bereits.");
-      return;
-    }
-
-    state.categories.push({
-      id: makeId(),
-      name: name.slice(0, 30),
-      xp: 10
-    });
-
-    save();
-    renderAll();
-    toast("Kategorie erstellt · 10 XP pro Aufgabe.");
-  }
-
-  function deleteCategory(id) {
-    if (DEFAULT_CATEGORIES.some(function (item) {
-      return item.id === id;
-    })) return;
-
-    var cat = getCategory(id);
-
-    if (!window.confirm(
-      'Kategorie "' + cat.name + '" löschen? Aufgaben wechseln zu Daily.'
-    )) return;
-
-    state.tasks.forEach(function (task) {
-      if (task.category === id) {
-        task.category = "daily";
-      }
-    });
-
-    state.categories = state.categories.filter(function (item) {
-      return item.id !== id;
-    });
-
-    save();
-    renderAll();
-    toast("Kategorie gelöscht.");
-  }
-
-  /* -------------------------------------------------------
-     REWARD CONFIRMATION MODAL
-  ------------------------------------------------------- */
-
-  function ensureRewardModal() {
-    var overlay = $("#dailyapp-reward-overlay");
-    if (overlay) return overlay;
-
-    overlay = document.createElement("div");
-    overlay.id = "dailyapp-reward-overlay";
-    overlay.setAttribute("role", "presentation");
-
-    overlay.innerHTML =
-      '<section id="dailyapp-reward-modal" role="dialog" ' +
-      'aria-modal="true" aria-labelledby="dailyapp-reward-title">' +
-        '<div id="dailyapp-reward-content"></div>' +
-      '</section>';
-
-    document.body.appendChild(overlay);
-
-    overlay.addEventListener("click", function (event) {
-      if (event.target === overlay) closeRewardModal();
-    });
-
-    return overlay;
-  }
-
-  function openRewardModal(reward) {
-    var overlay = ensureRewardModal();
-    var content = $("#dailyapp-reward-content");
-
-    if (!content || !reward) return;
-
-    pendingRewardId = reward.id;
-
-    var cost = clampNumber(reward.cost, 1, MAX_REWARD_COST, 1);
-    var balance = state.coins;
-    var canAfford = balance >= cost;
-    var after = Math.max(0, balance - cost);
-
-    content.innerHTML =
-      '<div class="dailyapp-reward-icon">' +
-        escapeHTML(reward.icon || "🎁") +
-      '</div>' +
-      '<p class="dailyapp-modal-kicker">Reward einlösen</p>' +
-      '<h2 class="dailyapp-modal-title" id="dailyapp-reward-title">' +
-        escapeHTML(reward.name) +
-      '</h2>' +
-      '<p class="dailyapp-modal-description">' +
-        escapeHTML(reward.description || "Deine ausgewählte Belohnung.") +
-        '<br><strong>' + reward.minutes +
-        ' Minuten Freizeit</strong>' +
-      '</p>' +
-      '<div class="dailyapp-balance-box">' +
-        '<div class="dailyapp-balance-row">' +
-          '<span>Aktueller Kontostand</span>' +
-          '<strong>' + balance.toLocaleString("de-AT") + ' ◈</strong>' +
-        '</div>' +
-        '<div class="dailyapp-balance-row">' +
-          '<span>Reward-Kosten</span>' +
-          '<strong>−' + cost.toLocaleString("de-AT") + ' ◈</strong>' +
-        '</div>' +
-        '<div class="dailyapp-balance-row after">' +
-          '<span>Danach übrig</span>' +
-          '<strong>' + after.toLocaleString("de-AT") + ' ◈</strong>' +
-        '</div>' +
-      '</div>' +
-      (canAfford ? "" :
-        '<p class="dailyapp-insufficient">Dir fehlen ' +
-          (cost - balance).toLocaleString("de-AT") +
-          ' Coins. Du kannst diesen Reward momentan nicht einlösen.</p>') +
-      '<div class="dailyapp-modal-actions">' +
-        '<button type="button" id="reward-modal-cancel" ' +
-          'class="dailyapp-modal-button dailyapp-modal-cancel">' +
-          'Abbrechen' +
-        '</button>' +
-        '<button type="button" id="reward-modal-confirm" ' +
-          'class="dailyapp-modal-button dailyapp-modal-confirm" ' +
-          (canAfford ? "" : "disabled") + '>' +
-          (canAfford ? "Jetzt einlösen" : "Zu wenig Coins") +
-        '</button>' +
-      '</div>';
-
-    overlay.classList.add("open");
-    document.body.style.overflow = "hidden";
-
-    var cancelButton = $("#reward-modal-cancel");
-    if (cancelButton) cancelButton.focus();
-  }
-
-  function closeRewardModal() {
-    var overlay = $("#dailyapp-reward-overlay");
-
-    pendingRewardId = null;
-
-    if (overlay) overlay.classList.remove("open");
-
-    document.body.style.overflow = "";
-  }
-
-  function showRewardSuccess(reward, oldBalance, newBalance, cost) {
-    var overlay = ensureRewardModal();
-    var content = $("#dailyapp-reward-content");
-
-    if (!content) return;
-
-    pendingRewardId = null;
-
-    content.innerHTML =
-      '<div class="dailyapp-reward-success">' +
-        '<div class="dailyapp-success-icon">✓</div>' +
-        '<p class="dailyapp-modal-kicker">Einlösung erfolgreich</p>' +
-        '<h2 class="dailyapp-modal-title" id="dailyapp-reward-title">' +
-          escapeHTML(reward.name) +
-        '</h2>' +
-        '<p class="dailyapp-modal-description">' +
-          'Deine Belohnung ist jetzt in deinem Shop-Verlauf gespeichert.' +
-        '</p>' +
-        '<div class="dailyapp-balance-box">' +
-          '<div class="dailyapp-balance-row">' +
-            '<span>Freizeit freigeschaltet</span>' +
-            '<strong>' + reward.minutes + ' Minuten</strong>' +
-          '</div>' +
-          '<div class="dailyapp-balance-row">' +
-            '<span>Vorher</span>' +
-            '<strong>' + oldBalance.toLocaleString("de-AT") + ' ◈</strong>' +
-          '</div>' +
-          '<div class="dailyapp-balance-row after">' +
-            '<span>Neuer Kontostand</span>' +
-            '<strong>' + newBalance.toLocaleString("de-AT") + ' ◈</strong>' +
-          '</div>' +
-        '</div>' +
-        '<div class="dailyapp-coin-deduction">🪙 −' +
-          cost.toLocaleString("de-AT") + ' Coins</div>' +
-        '<div class="dailyapp-modal-actions" style="margin-top:23px">' +
-          '<button type="button" id="reward-modal-close" ' +
-            'class="dailyapp-modal-button dailyapp-modal-confirm">' +
-            'Alles klar' +
-          '</button>' +
-        '</div>' +
-      '</div>';
-
-    overlay.classList.add("open");
-
-    var closeButton = $("#reward-modal-close");
-    if (closeButton) closeButton.focus();
-  }
-
-  function buyReward(rewardId) {
-    var reward = state.rewards.find(function (item) {
-      return item.id === rewardId;
-    });
-
-    if (!reward) {
-      toast("Dieser Reward wurde nicht gefunden.");
-      return;
-    }
-
-    openRewardModal(reward);
-  }
-
-  function confirmRewardPurchase() {
-    if (!pendingRewardId) return;
-
-    var reward = state.rewards.find(function (item) {
-      return item.id === pendingRewardId;
-    });
-
-    if (!reward) {
-      closeRewardModal();
-      toast("Dieser Reward wurde nicht gefunden.");
-      return;
-    }
-
-    var cost = clampNumber(reward.cost, 1, MAX_REWARD_COST, 1);
-
-    if (state.coins < cost) {
-      openRewardModal(reward);
-      toast("Nicht genug Coins. Dir fehlen " + (cost - state.coins) + ".");
-      return;
-    }
-
-    var oldBalance = state.coins;
-    var newBalance = oldBalance - cost;
-    var now = new Date().toISOString();
-
-    state.coins = newBalance;
-
-    state.coinTransactions.push({
-      id: makeId(),
-      type: "shop-purchase",
-      amount: -cost,
-      description: "Reward eingelöst: " + reward.name,
-      date: todayKey(),
-      createdAt: now
-    });
-
-    state.coinTransactions = state.coinTransactions.slice(-500);
-
-    state.shopHistory.push({
-      id: makeId(),
-      rewardId: reward.id,
-      name: reward.name,
-      minutes: reward.minutes,
-      cost: cost,
-      date: todayKey(),
-      createdAt: now
-    });
-
-    state.shopHistory = state.shopHistory.slice(-200);
-
-    pendingRewardId = null;
-
-    save();
-    renderAll();
-
-    showRewardSuccess(reward, oldBalance, newBalance, cost);
-  }
-
-  function openCustomReward() {
-    var panel = $("#custom-reward-panel");
-    if (!panel) return;
-
-    panel.hidden = false;
-
-    var input = $("#custom-reward-name");
-    if (input) input.focus();
-  }
-
-  function closeCustomReward() {
-    var panel = $("#custom-reward-panel");
-    if (panel) panel.hidden = true;
-  }
-
-  function createCustomReward() {
-    var nameInput = $("#custom-reward-name");
-    var minutesInput = $("#custom-reward-minutes");
-    var costInput = $("#custom-reward-cost");
-
-    if (!nameInput || !minutesInput || !costInput) return;
-
-    var name = nameInput.value.trim();
-    var minutes = Number(minutesInput.value);
-    var cost = Number(costInput.value);
-
-    if (!name) {
-      toast("Bitte gib deinem Reward einen Namen.");
-      nameInput.focus();
-      return;
-    }
-
-    if (!Number.isInteger(minutes) || minutes < 5 || minutes > 480) {
-      toast("Freizeit muss zwischen 5 und 480 Minuten liegen.");
-      minutesInput.focus();
-      return;
-    }
-
-    if (!Number.isInteger(cost) || cost < 1 || cost > MAX_REWARD_COST) {
-      toast("Der Preis muss zwischen 1 und 10.000 Coins liegen.");
-      costInput.focus();
-      return;
-    }
-
-    if (state.rewards.length >= 100) {
-      toast("Du kannst maximal 100 Rewards speichern.");
-      return;
-    }
-
-    state.rewards.push({
-      id: makeId(),
-      name: name.slice(0, 50),
-      description: minutes + " Minuten selbst geplante Freizeit.",
-      minutes: minutes,
-      cost: cost,
-      icon: "✨",
-      custom: true
-    });
-
-    save();
-
-    nameInput.value = "";
-    minutesInput.value = "30";
-    costInput.value = "60";
-
-    closeCustomReward();
-    renderAll();
-    toast("Eigener Reward erstellt.");
-  }
-
-  function go(view) {
-    var page = $("#view-" + view);
-
-    if (!page) {
-      console.warn("DailyApp view not found:", view);
-      return;
-    }
-
-    var current = $(".view.active");
-
-    if (current && current !== page) {
-      previousView = current.id;
-    }
-
-    $$(".view").forEach(function (item) {
-      item.classList.toggle("active", item === page);
-      item.classList.remove("dailyapp-view-enter");
-    });
-
-    if (!prefersReducedMotion()) {
-      void page.offsetWidth;
-      page.classList.add("dailyapp-view-enter");
-    }
-
-    $$(".bottom-nav [data-view]").forEach(function (button) {
-      button.classList.toggle(
-        "active",
-        button.getAttribute("data-view") === view
-      );
-    });
-
-    if (view === "calendar") {
-      renderCalendar();
-      renderHeatmap();
-    }
-
-    if (view === "analytics") renderAnalytics();
-    if (view === "shop") renderShop();
-
-    window.scrollTo({
-      top: 0,
-      behavior: prefersReducedMotion() ? "auto" : "smooth"
-    });
-  }
-
-  function updateTimerDisplay() {
-    var display = $("#timer-display");
-
-    if (display) {
-      display.textContent =
-        pad(Math.floor(timerSeconds / 60)) + ":" +
-        pad(timerSeconds % 60);
-    }
-
-    var button = $("#timer-start");
-
-    if (button) {
-      button.textContent = timerRunning
-        ? "Pause"
-        : (timerSeconds < 25 * 60 ? "Weiter" : "Start");
-    }
-  }
-
-  function pauseTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-
-    timerInterval = null;
-    timerRunning = false;
-    updateTimerDisplay();
-    setText("#timer-status", "Pausiert. Weiter, wenn du bereit bist.");
-  }
-
-  function startTimer() {
-    if (timerRunning) {
-      pauseTimer();
-      return;
-    }
-
-    if (timerSeconds <= 0) timerSeconds = 25 * 60;
-
-    timerRunning = true;
-    updateTimerDisplay();
-    setText("#timer-status", "Fokus läuft …");
-
-    timerInterval = setInterval(function () {
-      timerSeconds = Math.max(0, timerSeconds - 1);
-      updateTimerDisplay();
-
-      if (timerSeconds === 0) {
-        pauseTimer();
-
-        state.focusSessions = (state.focusSessions || 0) + 1;
-
-        save();
-        renderProgress();
-        renderAnalytics();
-
-        setText("#timer-status", "Session fertig. Eine Pause ist okay.");
-        toast("Fokus-Session abgeschlossen!");
-      }
-    }, 1000);
-  }
-
-  function resetTimer(minutes) {
-    if (timerInterval) clearInterval(timerInterval);
-
-    timerInterval = null;
-    timerRunning = false;
-    timerSeconds = clampNumber(minutes, 1, 180, 25) * 60;
-
-    $$("[data-minutes]").forEach(function (button) {
-      button.classList.toggle(
-        "active",
-        Number(button.getAttribute("data-minutes")) ===
-          Number(minutes || 25)
-      );
-    });
-
-    setText("#timer-status", "Bereit, wenn du es bist.");
-    updateTimerDisplay();
-  }
-
-  function exportData() {
-    var blob = new Blob(
-      [JSON.stringify({
-        app: "DailyApp",
-        version: 3,
-        exportedAt: new Date().toISOString(),
-        data: state
-      }, null, 2)],
-      { type: "application/json" }
-    );
-
-    var url = URL.createObjectURL(blob);
-    var link = document.createElement("a");
-
-    link.href = url;
-    link.download = "dailyapp-backup-" + todayKey() + ".json";
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    setTimeout(function () {
-      URL.revokeObjectURL(url);
-    }, 1000);
-
-    toast("Backup exportiert.");
-  }
-
-  function importData(file) {
-    if (!file) return;
-
-    var reader = new FileReader();
-
-    reader.onload = function () {
-      try {
-        var object = JSON.parse(String(reader.result || ""));
-        var data = object.data || object;
-
-        if (!data ||
-            !Array.isArray(data.tasks) ||
-            !Array.isArray(data.categories)) {
-          throw new Error("Das ist kein gültiges DailyApp-Backup.");
-        }
-
-        if (!window.confirm(
-          "Backup importieren? Deine aktuellen Aufgaben und Coins werden ersetzt."
-        )) return;
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-        state = loadState();
-        ensureDailyTasks();
-        awardDailyCoins();
-
-        renderAll();
-        toast("Backup importiert.");
-      } catch (error) {
-        window.alert(
-          error.message || "Backup konnte nicht importiert werden."
-        );
-      }
-    };
-
-    reader.onerror = function () {
-      window.alert("Datei konnte nicht gelesen werden.");
-    };
-
-    reader.readAsText(file);
-  }
-
-  function resetAllData() {
-    if (!window.confirm(
-      "Alle DailyApp-Aufgaben, Coins und Statistiken zurücksetzen? Das kann nicht rückgängig gemacht werden."
-    )) return;
-
-    state = defaultState();
-    ensureDailyTasks();
-    awardDailyCoins();
-    renderAll();
-    toast("DailyApp-Daten zurückgesetzt.");
-  }
-
-  function handleClick(event) {
-    var target = event.target;
-
-    if (!target || !target.closest) return;
-
-    if (target.closest("#reward-modal-cancel") ||
-        target.closest("#reward-modal-close")) {
-      closeRewardModal();
-      return;
-    }
-
-    if (target.closest("#reward-modal-confirm")) {
-      confirmRewardPurchase();
-      return;
-    }
-
-    var nav = target.closest("[data-view]");
-
-    if (nav && nav.closest(".bottom-nav, nav")) {
-      go(nav.getAttribute("data-view"));
-      return;
-    }
-
-    var goButton = target.closest("[data-go]");
-
-    if (goButton) {
-      go(goButton.getAttribute("data-go"));
-      return;
-    }
-
-    var toggle = target.closest("[data-toggle]");
-
-    if (toggle) {
-      toggleTask(toggle.getAttribute("data-toggle"));
-      return;
-    }
-
-    var remove = target.closest("[data-delete]");
-
-    if (remove) {
-      deleteTask(remove.getAttribute("data-delete"));
-      return;
-    }
-
-    var dateButton = target.closest("[data-date]");
-
-    if (dateButton) {
-      selectedDate = dateButton.getAttribute("data-date");
-      renderCalendar();
-      return;
-    }
-
-    if (target.closest("#prev-month")) {
-      calendarCursor = new Date(
-        calendarCursor.getFullYear(),
-        calendarCursor.getMonth() - 1,
-        1
-      );
-
-      renderCalendar();
-      return;
-    }
-
-    if (target.closest("#next-month")) {
-      calendarCursor = new Date(
-        calendarCursor.getFullYear(),
-        calendarCursor.getMonth() + 1,
-        1
-      );
-
-      renderCalendar();
-      return;
-    }
-
-    var filter = target.closest("[data-filter]");
-
-    if (filter) {
-      currentFilter = filter.getAttribute("data-filter");
-
-      $$("[data-filter]").forEach(function (button) {
-        button.classList.toggle("active", button === filter);
-      });
-
-      renderTaskList();
-      return;
-    }
-
-    var accentButton = target.closest(
-      "#accent-options button[data-accent]"
-    );
-
-    if (accentButton &&
-        ACCENTS[accentButton.getAttribute("data-accent")]) {
-      appearance.accent = accentButton.getAttribute("data-accent");
-      saveAppearance();
-      toast("Akzentfarbe geändert.");
-      return;
-    }
-
-    var categoryRemove = target.closest("[data-delete-cat]");
-
-    if (categoryRemove) {
-      deleteCategory(categoryRemove.getAttribute("data-delete-cat"));
-      return;
-    }
-
-    var minutes = target.closest("[data-minutes]");
-
-    if (minutes) {
-      resetTimer(minutes.getAttribute("data-minutes"));
-      return;
-    }
-
-    var buyButton = target.closest("[data-reward]");
-
-    if (buyButton) {
-      buyReward(buyButton.getAttribute("data-reward"));
-      return;
-    }
-
-    if (target.closest("#custom-reward-open")) {
-      openCustomReward();
-      return;
-    }
-
-    if (target.closest("#custom-reward-cancel")) {
-      closeCustomReward();
-      return;
-    }
-
-    if (target.closest("#command-add-task") ||
-        target.closest("#quick-add")) {
-      go("tasks");
-
-      var input = $("#task-input");
-      if (input) input.focus();
-
-      return;
-    }
-
-    if (target.closest("#timer-start")) {
-      startTimer();
-      return;
-    }
-
-    if (target.closest("#timer-reset")) {
-      resetTimer(25);
-      return;
-    }
-
-    if (target.closest("#export-data")) {
-      exportData();
-      return;
-    }
-
-    if (target.closest("#reset-data")) {
-      resetAllData();
-      return;
-    }
-  }
-
-  function handleSubmit(event) {
-    var form = event.target;
-
-    if (form.matches("#task-form")) {
-      event.preventDefault();
-
-      var input = $("#task-input");
-      var select = $("#task-category");
-      var kind = $("#task-kind");
-
-      if (!input || !input.value.trim()) return;
-
-      createTask(
-        input.value,
-        select ? select.value : "daily",
-        kind ? kind.value : "task"
-      );
-
-      input.value = "";
-      input.focus();
-      return;
-    }
-
-    if (form.matches("#category-form")) {
-      event.preventDefault();
-
-      var categoryInput = $("#category-input");
-
-      if (!categoryInput || !categoryInput.value.trim()) return;
-
-      addCategory(categoryInput.value);
-      categoryInput.value = "";
-      return;
-    }
-
-    if (form.matches("#custom-reward-form")) {
-      event.preventDefault();
-      createCustomReward();
-    }
-  }
-
-  function handleChange(event) {
-    if (event.target.matches("#theme-select")) {
-      appearance.theme = ["dark", "light", "system"].indexOf(
-        event.target.value
-      ) >= 0 ? event.target.value : "dark";
-
-      saveAppearance();
-      toast("Darstellung geändert.");
-      return;
-    }
-
-    if (event.target.matches("#import-file")) {
-      var file = event.target.files && event.target.files[0];
-
-      if (file) importData(file);
-
-      event.target.value = "";
-    }
-  }
-
-  function init() {
-    installMotionStyles();
-
-    document.addEventListener("click", handleClick);
-    document.addEventListener("submit", handleSubmit);
-    document.addEventListener("change", handleChange);
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && $("#dailyapp-reward-overlay.open")) {
-        closeRewardModal();
-      }
-    });
-
-    window.addEventListener("pageshow", function () {
-      try {
-        renderAll();
-      } catch (error) {
-        console.error("DailyApp refresh error:", error);
-      }
-    });
-
-    try {
-      state = loadState();
-      appearance = loadAppearance();
-
-      applyAppearance();
-      ensureDailyTasks();
-      awardDailyCoins();
-      renderAll();
-
-      if (window.matchMedia) {
-        var media = window.matchMedia("(prefers-color-scheme: dark)");
-
-        if (media.addEventListener) {
-          media.addEventListener("change", function () {
-            if (appearance.theme === "system" ||
-                appearance.theme === "auto") {
-              applyAppearance();
-            }
-          });
-        }
-      }
-
-      console.log("DailyApp 3.1 ready.");
-    } catch (error) {
-      console.error("DailyApp could not start:", error);
-
-      var toastEl = $("#toast");
-
-      if (toastEl) {
-        toastEl.textContent =
-          "DailyApp error: " + (error.message || error);
-        toastEl.classList.add("show");
-      }
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
+/* ==========================================================
+   DailyApp 3.1 — Clean Green Edition
+   Responsive • Colorful • Yellow Coins • Original HTML
+   ========================================================== */
+
+/* ==========================================================
+   1. DESIGN SYSTEM
+   ========================================================== */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #090f0a;
+  --surface: #111a12;
+  --surface-2: #172219;
+  --surface-3: #202e22;
+  --surface-hover: #273a29;
+
+  --text: #dce8d9;
+  --muted: #9aab96;
+  --muted-2: #bfceb9;
+
+  --line: rgba(148, 182, 137, 0.15);
+  --line-strong: rgba(148, 182, 137, 0.25);
+
+  /* These values are updated by script.js */
+  --accent: #b6ff00;
+  --accent-bright: #cbff4e;
+  --accent-rgb: 182, 255, 0;
+
+  /* Coins always stay yellow */
+  --coin-color: #f4ca58;
+  --coin-bright: #ffdc78;
+  --coin-rgb: 244, 202, 88;
+
+  --danger: #f07878;
+  --success: #75dda0;
+  --warning: #efc66f;
+  --info: #83c2ff;
+
+  --shadow-sm: 0 3px 12px rgba(0, 0, 0, 0.13);
+  --shadow-md: 0 9px 28px rgba(0, 0, 0, 0.19);
+  --shadow-lg: 0 20px 55px rgba(0, 0, 0, 0.28);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 23px;
+
+  --content-width: 1180px;
+  --nav-height: 78px;
+
+  --transition-fast: 150ms ease;
+  --transition: 220ms ease;
+  --transition-slow: 320ms ease;
+
+  --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  /*
+   * Compatibility with the existing app and modal.
+   */
+  --card: var(--surface);
+  --mint: var(--accent);
+  --blue: var(--accent);
+  --toxic: var(--accent);
+  --toxic-bright: var(--accent-bright);
+  --toxic-rgb: var(--accent-rgb);
+}
+
+/* ==========================================================
+   2. LIGHT THEME
+   ========================================================== */
+
+html[data-theme="light"],
+html.light,
+body.light,
+body[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #edf3e9;
+  --surface: #f8fbf5;
+  --surface-2: #eff5eb;
+  --surface-3: #e2ecdd;
+  --surface-hover: #d8e6d2;
+
+  --text: #29372a;
+  --muted: #71836d;
+  --muted-2: #52664e;
+
+  --line: rgba(55, 91, 48, 0.14);
+  --line-strong: rgba(55, 110, 45, 0.26);
+
+  --shadow-sm: 0 3px 12px rgba(38, 65, 32, 0.045);
+  --shadow-md: 0 9px 28px rgba(38, 65, 32, 0.075);
+  --shadow-lg: 0 20px 55px rgba(38, 65, 32, 0.13);
+
+  --card: var(--surface);
+}
+
+/* ==========================================================
+   3. RESET AND BASE
+   ========================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+
+  background:
+    radial-gradient(
+      ellipse at 12% 0%,
+      rgba(42, 95, 47, 0.13),
+      transparent 44%
+    ),
+    radial-gradient(
+      ellipse at 100% 75%,
+      rgba(30, 75, 40, 0.07),
+      transparent 42%
+    ),
+    var(--bg);
+
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+
+  transition:
+    background-color var(--transition-slow),
+    color var(--transition);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font);
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: inherit;
+}
+
+button {
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(var(--accent-rgb), 0.23);
+  color: var(--text);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border: 2px solid var(--bg);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b533c;
+}
+
+/* ==========================================================
+   4. APP LAYOUT
+   ========================================================== */
+
+.app-shell {
+  width: min(calc(100% - 36px), var(--content-width));
+  min-height: 100vh;
+  margin-inline: auto;
+  padding-bottom: calc(var(--nav-height) + 28px);
+}
+
+main {
+  width: 100%;
+  min-width: 0;
+}
+
+.view {
+  display: none;
+  min-width: 0;
+  padding-top: 23px;
+  padding-bottom: 25px;
+}
+
+.view.active {
+  display: block;
+}
+
+.view > * + * {
+  margin-top: 18px;
+}
+
+section,
+article,
+main,
+.view {
+  min-width: 0;
+}
+
+.page-heading {
+  margin-bottom: 20px;
+}
+
+.page-heading h2 {
+  margin-bottom: 8px;
+}
+
+.page-heading > p:last-child {
+  max-width: 650px;
+  margin-top: 0;
+  line-height: 1.65;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 26px;
+  margin-bottom: 13px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+.section-heading .eyebrow {
+  margin-bottom: 5px;
+}
+
+/* ==========================================================
+   5. TYPOGRAPHY
+   ========================================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text);
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 4vw, 38px);
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: clamp(21px, 3vw, 26px);
+}
+
+h3 {
+  margin: 0 0 9px;
+  font-size: 16px;
+}
+
+h4 {
+  margin: 0 0 7px;
+  font-size: 14px;
+}
+
+p {
+  color: var(--muted);
+}
+
+strong,
+b {
+  font-weight: 700;
+}
+
+small,
+.small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.tiny {
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.eyebrow {
+  display: block;
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/* Brand */
+
+.topbar h1 span {
+  color: var(--accent);
+}
+
+/* ==========================================================
+   6. HEADER
+   ========================================================== */
+
+.topbar {
+  position: relative;
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  min-height: 78px;
+  padding: 15px 0;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+
+.topbar .eyebrow {
+  margin-bottom: 4px;
+}
+
+.icon-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
+
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+
+  font-size: 22px;
+  line-height: 1;
+
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.icon-button:hover {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  background: var(--surface-3);
+}
+
+.icon-button:active {
+  transform: scale(0.96);
+}
+
+.icon-button.small {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  font-size: 23px;
+}
+
+/* ==========================================================
+   7. PANELS AND CARDS
+   ========================================================== */
+
+.panel,
+.card,
+.stat-card,
+.task-card,
+.achievement,
+.calendar-panel,
+.heatmap-panel,
+.timer-panel,
+.shop-item,
+.weekly-panel,
+.chart-panel {
+  min-width: 0;
+
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    border-color var(--transition),
+    background-color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.panel {
+  padding: 20px;
+}
+
+.panel:hover,
+.card:hover,
+.stat-card:hover,
+.shop-item:hover,
+.achievement:hover {
+  border-color: var(--line-strong);
+}
+
+.panel h2:last-child,
+.panel h3:last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================
+   8. COMMAND CENTER HERO
+   ========================================================== */
+
+.hero-card {
+  position: relative;
+  overflow: hidden;
+
+  padding: clamp(21px, 3vw, 32px);
+
+  border: 1px solid rgba(var(--accent-rgb), 0.20);
+  border-radius: var(--radius-xl);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(var(--accent-rgb), 0.09),
+      transparent 40%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(35, 74, 38, 0.16),
+      transparent 70%
+    ),
+    var(--surface);
+
+  box-shadow: var(--shadow-md);
+}
+
+.hero-card h2 {
+  font-size: clamp(25px, 3.6vw, 34px);
+  letter-spacing: -0.045em;
+}
+
+.hero-card > p {
+  line-height: 1.7;
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 21px;
+}
+
+.hero-top > span:last-child {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 28px;
+  padding: 5px 10px;
+
+  border: 1px solid rgba(var(--accent-rgb), 0.20);
+  border-radius: 999px;
+
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--accent);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+
+/* ==========================================================
+   9. PROGRESS BARS
+   ========================================================== */
+
+.progress-track {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  height: 9px;
+  margin-top: 23px;
+
+  border: 1px solid rgba(140, 183, 129, 0.08);
+  border-radius: 999px;
+
+  background: var(--surface-3);
+}
+
+.progress-fill {
+  display: block;
+
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+  background: var(--accent);
+
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.15);
+
+  transition: width 550ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 10px;
+
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress-meta strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+#daily-progress-percent {
+  color: var(--accent);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   10. WALLET AND COINS
+   ========================================================== */
+
+.wallet-card {
+  position: relative;
+  overflow: hidden;
+
+  border-color: rgba(var(--coin-rgb), 0.19);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(var(--coin-rgb), 0.075),
+      transparent 45%
+    ),
+    var(--surface);
+}
+
+.wallet-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.wallet-heading h2,
+.shop-wallet h2 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  font-size: clamp(24px, 3vw, 31px);
+}
+
+.wallet-heading h2 > span:first-child,
+.shop-wallet h2 > span:first-child {
+  color: var(--coin-color);
+}
+
+#home-coins,
+#shop-coins {
+  color: var(--coin-color);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.wallet-symbol {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+
+  width: 46px;
+  height: 46px;
+
+  border: 1px solid rgba(var(--coin-rgb), 0.21);
+  border-radius: 14px;
+
+  background: rgba(var(--coin-rgb), 0.09);
+  color: var(--coin-color);
+
+  font-size: 24px;
+}
+
+.wallet-card > .muted {
+  margin: 12px 0 18px;
+  line-height: 1.6;
+}
+
+.wallet-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 13px 0;
+  margin-bottom: 12px;
+
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.wallet-meta strong {
+  color: var(--coin-color);
+  text-align: right;
+}
+
+.shop-wallet > .eyebrow {
+  margin-bottom: 9px;
+}
+
+.shop-wallet > p:last-child {
+  margin-bottom: 0;
+  line-height: 1.65;
+}
+
+/* ==========================================================
+   11. STATISTICS, XP AND STREAK
+   ========================================================== */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.stat-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  min-width: 0;
+  min-height: 134px;
+  padding: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(42, 81, 43, 0.12),
+      transparent 72%
+    ),
+    var(--surface);
+}
+
+.stat-icon {
+  display: grid;
+  place-items: center;
+
+  width: 37px;
+  height: 37px;
+  margin-bottom: 13px;
+
+  border: 1px solid rgba(var(--accent-rgb), 0.17);
+  border-radius: 12px;
+
+  background: rgba(var(--accent-rgb), 0.09);
+  color: var(--accent);
+
+  font-size: 18px;
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 7px;
+
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.stat-card > strong {
+  display: block;
+  min-width: 0;
+
+  color: var(--text);
+  font-size: clamp(25px, 3vw, 32px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.stat-card > small {
+  display: block;
+  margin-top: 6px;
+
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#home-xp {
+  color: var(--accent);
+}
+
+#home-streak {
+  color: var(--success);
+}
+
+#home-level {
+  color: var(--muted);
+}
+
+/* Three compact cards on Progress */
+.stat-grid.three .stat-card {
+  min-height: 111px;
+  justify-content: center;
+}
+
+.stat-grid.three .stat-card > strong {
+  font-size: clamp(22px, 2.4vw, 28px);
+}
+
+/* ==========================================================
+   12. BUTTONS
+   ========================================================== */
+
+.primary-button,
+.secondary-button,
+.danger-button,
+.text-button,
+.filter-chip,
+.shop-buy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 44px;
+  padding: 11px 16px;
+
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.primary-button {
+  border-color: transparent;
+  background: var(--accent);
+  color: #17200f;
+  box-shadow: 0 3px 10px rgba(var(--accent-rgb), 0.06);
+}
+
+.primary-button:hover {
+  background: var(--accent-bright);
+  box-shadow: 0 5px 17px rgba(var(--accent-rgb), 0.13);
+}
+
+.secondary-button {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.secondary-button:hover {
+  border-color: rgba(var(--accent-rgb), 0.34);
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.danger-button {
+  border-color: rgba(240, 120, 120, 0.22);
+  background: rgba(240, 120, 120, 0.08);
+  color: var(--danger);
+}
+
+.danger-button:hover {
+  background: rgba(240, 120, 120, 0.15);
+}
+
+.text-button {
+  min-height: 36px;
+  padding: 7px 10px;
+
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent);
+}
+
+.text-button:hover {
+  background: rgba(var(--accent-rgb), 0.075);
+}
+
+.primary-button:active,
+.secondary-button:active,
+.danger-button:active,
+.text-button:active,
+.shop-buy:active {
+  transform: scale(0.98);
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-actions button {
+  width: 100%;
+  min-height: 47px;
+}
+
+.button-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.button-row > button {
+  min-width: 110px;
+}
+
+.button-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.button-stack > button,
+.button-stack > .file-button {
+  width: 100%;
+}
+
+.file-button {
+  cursor: pointer;
+}
+
+/* ==========================================================
+   13. TASK LISTS
+   ========================================================== */
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 13px 15px;
+
+  background:
+    linear-gradient(
+      115deg,
+      rgba(36, 67, 38, 0.07),
+      transparent 75%
+    ),
+    var(--surface);
+}
+
+.task-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+
+.task-card.done {
+  opacity: 0.75;
+  background: var(--surface-2);
+}
+
+.task-card.done .task-title {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: rgba(154, 180, 147, 0.6);
+}
+
+/*
+ * The JavaScript creates a BUTTON.task-check,
+ * not a native checkbox. Style the actual element.
+ */
+
+.task-check {
+  display: grid;
+  flex: 0 0 25px;
+  place-items: center;
+
+  width: 25px;
+  min-width: 25px;
+  height: 25px;
+  padding: 0;
+
+  border: 2px solid rgba(145, 176, 135, 0.42);
+  border-radius: 8px;
+
+  background: var(--surface-2);
+  color: #15200f;
+
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.task-check:hover {
+  border-color: var(--accent);
+}
+
+.task-check[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.task-check:active {
+  transform: scale(0.92);
+}
+
+.task-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.task-sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.task-xp {
+  flex-shrink: 0;
+  padding: 5px 8px;
+
+  border: 1px solid rgba(var(--accent-rgb), 0.14);
+  border-radius: 8px;
+
+  background: rgba(var(--accent-rgb), 0.07);
+  color: var(--accent);
+
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.delete-task {
+  display: inline-flex;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  background: transparent;
+  color: var(--muted);
+
+  font-size: 21px;
+  line-height: 1;
+
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.delete-task:hover {
+  border-color: rgba(240, 120, 120, 0.3);
+  background: rgba(240, 120, 120, 0.08);
+  color: var(--danger);
+}
+
+.empty-state {
+  padding: 23px 17px;
+
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+
+  background: rgba(39, 69, 39, 0.07);
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+/* ==========================================================
+   14. TASK FORM AND FILTERS
+   ========================================================== */
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.task-form > label {
+  margin: 0 0 -5px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+
+.filter-chip {
+  min-height: 36px;
+  padding: 8px 13px;
+
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
+.filter-chip:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.filter-chip.active {
+  border-color: rgba(var(--accent-rgb), 0.29);
+  background: rgba(var(--accent-rgb), 0.09);
+  color: var(--accent);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+
+  background: var(--surface-2);
+  color: var(--text);
+
+  font-size: 13px;
+  line-height: 1.4;
+
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+textarea {
+  min-height: 95px;
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: rgba(var(--accent-rgb), 0.32);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(var(--accent-rgb), 0.65);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.075);
+}
+
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted-2);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ==========================================================
+   15. CALENDAR — MONTH VIEW
+   Actual HTML: .calendar-weekdays and #calendar-days
+   ========================================================== */
+
+.calendar-panel {
+  overflow: hidden;
+  padding: 19px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 16px;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 18px;
+  font-weight: 750;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+/* The seven weekday labels are actual span children. */
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.calendar-weekdays > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 1px;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  background: rgba(50, 78, 48, 0.13);
+  color: var(--muted);
+
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Calendar cells are dynamically created buttons. */
+
+.calendar-grid,
+#calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+#calendar-days > span {
+  display: block;
+  min-width: 0;
+  min-height: 45px;
+}
+
+.calendar-day {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 45px;
+  padding: 5px;
+
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  background: var(--surface-2);
+  color: var(--text);
+
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.calendar-day:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+
+.calendar-day.today {
+  border-color: rgba(var(--accent-rgb), 0.54);
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.calendar-day.selected {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.13);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.12);
+}
+
+.calendar-day.today.selected {
+  border-color: var(--accent);
+}
+
+/*
+ * renderCalendar() uses "has-activity", not "has-tasks".
+ * Use a small accent bar at the bottom of active days.
+ */
+
+.calendar-day.has-activity::after {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+
+  width: 12px;
+  height: 3px;
+
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.14);
+
+  content: "";
+  transform: translateX(-50%);
+}
+
+.calendar-day.selected.has-activity::after {
+  background: var(--accent-bright);
+}
+
+/* Selected day's task list */
+
+#calendar-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* ==========================================================
+   16. ACTIVITY HEATMAP
+   ========================================================== */
+
+.heatmap-panel > p:first-child {
+  margin-top: 0;
+  line-height: 1.65;
+}
+
+.heatmap-months {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+
+  overflow: hidden;
+  margin: 15px 0 8px;
+  padding-left: 27px;
+
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: capitalize;
+}
+
+.heatmap-months span {
+  flex-shrink: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.heatmap-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.heatmap-weekdays {
+  display: grid;
+  flex: 0 0 20px;
+  grid-template-rows: repeat(4, 11px);
+  gap: 4px;
+
+  padding-top: 0;
+
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 11px;
+}
+
+.heatmap-weekdays span {
+  display: flex;
+  align-items: center;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 11px;
+  grid-template-rows: repeat(7, 11px);
+  gap: 4px;
+
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 9px;
+
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.heat-cell {
+  width: 11px;
+  height: 11px;
+  min-width: 11px;
+
+  border: 1px solid rgba(145, 185, 133, 0.11);
+  border-radius: 3px;
+
+  background: var(--surface-3);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.heat-0 {
+  background: #1b291d;
+}
+
+.heat-1 {
+  border-color: rgba(107, 167, 89, 0.24);
+  background: #355536;
+}
+
+.heat-2 {
+  border-color: rgba(119, 199, 101, 0.26);
+  background: #528347;
+}
+
+.heat-3 {
+  border-color: rgba(var(--accent-rgb), 0.34);
+  background: #82b85a;
+}
+
+.heat-4 {
+  border-color: transparent;
+  background: var(--accent);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+
+  margin-top: 13px;
+
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.heatmap-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.heatmap-legend .heat-0 {
+  background: #1b291d;
+}
+
+.heatmap-legend .heat-1 {
+  background: #355536;
+}
+
+.heatmap-legend .heat-2 {
+  background: #528347;
+}
+
+.heatmap-legend .heat-3 {
+  background: #82b85a;
+}
+
+.heatmap-legend .heat-4 {
+  background: var(--accent);
+}
+
+#heatmap-summary {
+  margin-bottom: 0;
+}
+
+/* ==========================================================
+   17. PROGRESS AND LEVEL
+   ========================================================== */
+
+.level-card {
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(var(--accent-rgb), 0.09),
+      transparent 40%
+    ),
+    var(--surface);
+}
+
+.level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.level-row > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.level-row .pill {
+  margin-bottom: 11px;
+}
+
+.level-row h2 {
+  margin-bottom: 5px;
+}
+
+.level-row p {
+  margin-top: 0;
+  line-height: 1.6;
+}
+
+.level-orb {
+  display: grid;
+  flex: 0 0 67px;
+  place-items: center;
+
+  width: 67px;
+  height: 67px;
+
+  border: 2px solid rgba(var(--accent-rgb), 0.4);
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 40% 30%,
+      rgba(var(--accent-rgb), 0.17),
+      transparent 75%
+    ),
+    var(--surface-2);
+
+  color: var(--accent);
+  font-size: 25px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+
+  box-shadow: 0 0 22px rgba(var(--accent-rgb), 0.07);
+}
+
+#progress-level {
+  font-size: clamp(24px, 3.3vw, 32px);
+  font-weight: 800;
+}
+
+#progress-title {
+  margin-bottom: 0;
+}
+
+#level-xp-text {
+  font-variant-numeric: tabular-nums;
+}
+
+#level-next {
+  text-align: right;
+}
+
+/* ==========================================================
+   18. ACHIEVEMENTS
+   ========================================================== */
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#achievement-summary {
+  margin: -3px 0 13px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.achievement-filters {
+  grid-column: 1 / -1;
+}
+
+.achievement-filters label {
+  color: var(--muted-2);
+  font-size: 12px;
+}
+
+.achievement-filters select {
+  min-height: 40px;
+  margin-top: 3px;
+}
+
+.achievement {
+  padding: 16px;
+}
+
+.achievement.unlocked {
+  border-color: rgba(var(--accent-rgb), 0.25);
+  background:
+    linear-gradient(
+      140deg,
+      rgba(var(--accent-rgb), 0.065),
+      transparent 75%
+    ),
+    var(--surface);
+}
+
+.achievement.locked {
+  background: var(--surface);
+}
+
+.achievement-icon {
+  display: grid;
+  place-items: center;
+
+  width: 43px;
+  height: 43px;
+  margin-bottom: 13px;
+
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-3);
+
+  font-size: 21px;
+}
+
+.achievement.unlocked .achievement-icon {
+  border-color: rgba(var(--accent-rgb), 0.24);
+  background: rgba(var(--accent-rgb), 0.09);
+}
+
+.achievement h3 {
+  margin-bottom: 7px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.achievement p {
+  min-height: 38px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.achievement small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+}
+
+.achievement > div[style*="height:6px"] {
+  background: var(--surface-3) !important;
+}
+
+/* ==========================================================
+   19. WEEKLY REPORT
+   ========================================================== */
+
+.weekly-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.weekly-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 13px 0;
+
+  border-bottom: 1px solid var(--line);
+
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.weekly-row:first-child {
+  padding-top: 0;
+}
+
+.weekly-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.weekly-row strong {
+  color: var(--accent);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ==========================================================
+   20. FOCUS TIMER
+   ========================================================== */
+
+.timer-panel {
+  text-align: center;
+}
+
+.timer-panel > p:first-child {
+  margin-top: 0;
+  line-height: 1.65;
+}
+
+.timer-display {
+  margin: 25px 0;
+
+  color: var(--accent);
+  font-size: clamp(50px, 10vw, 78px);
+  font-weight: 800;
+  letter-spacing: -0.075em;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-presets {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  margin-bottom: 15px;
+}
+
+.timer-panel .button-row {
+  margin-bottom: 12px;
+}
+
+#timer-status {
+  margin-bottom: 0;
+}
+
+/* ==========================================================
+   21. ANALYTICS CHARTS
+   This fixes the real .bar-chart / .bar-track / .bar-fill
+   elements generated by barHTML() in script.js.
+   ========================================================== */
+
+.chart-panel > p {
+  margin-bottom: 0;
+}
+
+.bar-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+
+  width: 100%;
+  min-width: 0;
+  padding: 9px 0 5px;
+}
+
+/* Monthly chart has six columns. */
+
+#analytics-month-chart {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.bar-value {
+  display: block;
+
+  min-height: 16px;
+  color: var(--text);
+
+  font-size: 11px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.bar-track {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  width: min(100%, 36px);
+  height: 118px;
+  min-height: 118px;
+  overflow: hidden;
+
+  border: 1px solid rgba(136, 177, 126, 0.09);
+  border-radius: 8px 8px 5px 5px;
+
+  background: var(--surface-2);
+}
+
+.bar-fill {
+  display: block;
+
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+
+  border-radius: 6px 6px 3px 3px;
+
+  background: linear-gradient(
+    180deg,
+    var(--accent-bright),
+    var(--accent)
+  );
+
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.08);
+
+  transition: height 450ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.bar-label {
+  display: block;
+
+  max-width: 100%;
+  overflow: hidden;
+
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Weekly comparison */
+
+.compare-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.compare-metric {
+  min-width: 0;
+}
+
+.compare-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.compare-top strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.compare-top span {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-bars {
+  width: 100%;
+}
+
+.compare-bar {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+
+.compare-bar + .compare-bar {
+  margin-top: 7px;
+}
+
+.compare-bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+  background: var(--accent);
+
+  transition: width 500ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.compare-bar.previous span {
+  background: #5d9770;
+}
+
+.insight-line {
+  margin: 0;
+  padding: 12px 0;
+
+  border-bottom: 1px solid var(--line);
+
+  color: var(--muted-2);
+  line-height: 1.65;
+}
+
+.insight-line:first-child {
+  padding-top: 0;
+  color: var(--text);
+}
+
+.insight-line:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* ==========================================================
+   22. SHOP
+   Actual HTML: .shop-grid and .shop-item
+   ========================================================== */
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.shop-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  padding: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(40, 72, 40, 0.12),
+      transparent 75%
+    ),
+    var(--surface);
+}
+
+.shop-item-icon {
+  display: grid;
+  place-items: center;
+
+  width: 47px;
+  height: 47px;
+  margin-bottom: 15px;
+
+  border: 1px solid var(--line);
+  border-radius: 15px;
+
+  background: var(--surface-3);
+  font-size: 23px;
+}
+
+.shop-item h3 {
+  margin-bottom: 7px;
+  font-size: 16px;
+}
+
+.shop-item p {
+  flex: 1;
+  margin: 0 0 13px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.shop-price {
+  display: block;
+  margin: 0 0 13px;
+
+  color: var(--coin-color);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.shop-buy {
+  width: 100%;
+  margin-top: auto;
+  background: var(--accent);
+  color: #17200f;
+}
+
+#custom-reward-open {
+  width: 100%;
+  margin-top: auto;
+}
+
+.custom-reward-panel h3 {
+  margin-bottom: 17px;
+}
+
+#custom-reward-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+#custom-reward-form label {
+  margin: 4px 0 -5px;
+}
+
+/* Actual shop history markup generated by renderShop() */
+
+#shop-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#shop-history > p {
+  margin: 0;
+  line-height: 1.65;
+}
+
+.shop-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-history-item:first-child {
+  padding-top: 0;
+}
+
+.shop-history-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.shop-history-item > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-history-item > div strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.shop-history-item small {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.shop-history-item > strong {
+  flex-shrink: 0;
+
+  color: var(--coin-color);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ==========================================================
+   23. SETTINGS AND CATEGORIES
+   ========================================================== */
+
+.settings-group {
+  margin-bottom: 17px;
+  padding: 20px;
+}
+
+.settings-group h3 {
+  margin-bottom: 12px;
+}
+
+.settings-group > .muted {
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.settings-group > label {
+  margin-top: 15px;
+}
+
+.settings-group > label:first-of-type {
+  margin-top: 12px;
+}
+
+.accent-options {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-wrap: wrap;
+  padding: 5px 0 3px;
+}
+
+.accent-swatch {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 35px;
+  min-width: 35px;
+  height: 35px;
+  padding: 0;
+
+  border: 2px solid transparent;
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.accent-swatch:hover {
+  transform: scale(1.08);
+}
+
+.accent-swatch.active,
+.accent-swatch[aria-pressed="true"] {
+  border-color: var(--text);
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 0 0 5px currentColor;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 13px;
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  background: var(--surface-2);
+}
+
+.category-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-row strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.category-row small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.about-card p {
+  line-height: 1.65;
+}
+
+/* ==========================================================
+   24. TOAST NOTIFICATION
+   ========================================================== */
+
+#toast,
+.toast {
+  position: fixed;
+  z-index: 10001;
+
+  right: 18px;
+  bottom: calc(var(--nav-height) + 15px);
+  left: 18px;
+
+  width: fit-content;
+  max-width: min(440px, calc(100% - 36px));
+  margin-inline: auto;
+  padding: 12px 17px;
+
+  border: 1px solid var(--line-strong);
+  border-radius: 13px;
+
+  background: var(--surface-3);
+  color: var(--text);
+
+  box-shadow: var(--shadow-lg);
+
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.55;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+#toast.show,
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================
+   25. BOTTOM NAVIGATION
+   ========================================================== */
+
+.bottom-nav {
+  position: fixed;
+  z-index: 50;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  min-height: var(--nav-height);
+  padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+
+  border-top: 1px solid var(--line);
+
+  background: rgba(9, 16, 10, 0.94);
+
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+html[data-theme="light"] .bottom-nav,
+html.light .bottom-nav,
+body.light .bottom-nav,
+body[data-theme="light"] .bottom-nav {
+  background: rgba(237, 243, 233, 0.94);
+}
+
+.nav-item {
+  position: relative;
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  min-width: 0;
+  max-width: 112px;
+  min-height: 49px;
+  padding: 6px 4px;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  background: transparent;
+  color: var(--muted);
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.nav-item > span {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.nav-item > small {
+  display: block;
+
+  color: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.nav-item:hover {
+  background: rgba(65, 101, 62, 0.13);
+  color: var(--text);
+}
+
+.nav-item.active {
+  border-color: rgba(var(--accent-rgb), 0.13);
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--accent);
+}
+
+.nav-item.active::before {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+
+  width: 20px;
+  height: 2px;
+
+  border-radius: 999px;
+  background: var(--accent);
+  content: "";
+
+  transform: translateX(-50%);
+}
+
+/* ==========================================================
+   26. REWARD MODAL COMPATIBILITY
+   The JavaScript injects the actual modal markup.
+   ========================================================== */
+
+#dailyapp-reward-overlay {
+  overscroll-behavior: contain;
+}
+
+#dailyapp-reward-modal {
+  color: var(--text);
+}
+
+.dailyapp-modal-description {
+  color: var(--muted);
+}
+
+.dailyapp-balance-row strong {
+  color: var(--text);
+}
+
+.dailyapp-modal-cancel:hover {
+  border-color: var(--line-strong);
+}
+
+.dailyapp-modal-confirm:hover {
+  filter: brightness(1.05);
+}
+
+.dailyapp-reward-success .dailyapp-modal-title {
+  color: var(--text);
+}
+
+/* ==========================================================
+   27. UTILITY CLASSES
+   ========================================================== */
+
+.text-accent {
+  color: var(--accent) !important;
+}
+
+.text-coin {
+  color: var(--coin-color) !important;
+}
+
+.text-muted {
+  color: var(--muted) !important;
+}
+
+.text-danger {
+  color: var(--danger) !important;
+}
+
+.text-success {
+  color: var(--success) !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.gap-sm {
+  gap: 8px;
+}
+
+.gap-md {
+  gap: 14px;
+}
+
+.mt-0 {
+  margin-top: 0 !important;
+}
+
+.mt-1 {
+  margin-top: 8px !important;
+}
+
+.mt-2 {
+  margin-top: 16px !important;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+/* ==========================================================
+   28. TABLET
+   ========================================================== */
+
+@media (max-width: 900px) {
+  .app-shell {
+    width: min(calc(100% - 28px), var(--content-width));
+  }
+
+  .achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bar-chart {
+    gap: 7px;
+  }
+
+  .bar-track {
+    height: 105px;
+    min-height: 105px;
+  }
+}
+
+/* ==========================================================
+   29. MOBILE
+   ========================================================== */
+
+@media (max-width: 600px) {
+  :root {
+    --nav-height: 73px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+  }
+
+  body {
+    font-size: 13px;
+  }
+
+  .app-shell {
+    width: calc(100% - 22px);
+    padding-bottom: calc(var(--nav-height) + 22px);
+  }
+
+  .topbar {
+    min-height: 65px;
+    gap: 10px;
+    padding: 11px 0;
+  }
+
+  .topbar h1 {
+    font-size: 22px;
+  }
+
+  .view {
+    padding-top: 17px;
+    padding-bottom: 20px;
+  }
+
+  .view > * + * {
+    margin-top: 14px;
+  }
+
+  .section-heading {
+    margin-top: 22px;
+    margin-bottom: 11px;
+  }
+
+  .section-heading h2 {
+    font-size: 20px;
+  }
+
+  .page-heading {
+    margin-bottom: 17px;
+  }
+
+  .page-heading h2 {
+    font-size: 25px;
+  }
+
+  .hero-card {
+    padding: 21px 17px;
+  }
+
+  .hero-card h2 {
+    font-size: 26px;
+  }
+
+  .hero-top {
+    margin-bottom: 17px;
+  }
+
+  .panel {
+    padding: 15px;
+  }
+
+  .wallet-heading h2,
+  .shop-wallet h2 {
+    font-size: 24px;
+  }
+
+  .wallet-symbol {
+    width: 40px;
+    height: 40px;
+    font-size: 21px;
+  }
+
+  .stat-grid {
+    gap: 9px;
+  }
+
+  .stat-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .stat-card {
+    min-height: 123px;
+    padding: 13px;
+  }
+
+  .stat-icon {
+    width: 31px;
+    height: 31px;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  .stat-card > strong {
+    font-size: 25px;
+  }
+
+  .stat-card > small {
+    font-size: 11px;
+  }
+
+  .stat-grid.three .stat-card {
+    min-height: 104px;
+    padding: 10px 9px;
+  }
+
+  .stat-grid.three .stat-card > strong {
+    font-size: 21px;
+  }
+
+  .stat-grid.three .stat-label {
+    font-size: 10px;
+    line-height: 1.45;
+  }
+
+  .quick-actions {
+    gap: 8px;
+  }
+
+  .quick-actions button {
+    min-height: 45px;
+    padding: 10px 9px;
+    font-size: 12px;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .danger-button {
+    min-height: 43px;
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+
+  .task-card {
+    gap: 10px;
+    padding: 12px 10px;
+  }
+
+  .task-check {
+    flex-basis: 25px;
+    width: 25px;
+    min-width: 25px;
+    height: 25px;
+  }
+
+  .task-title {
+    font-size: 12px;
+  }
+
+  .task-sub {
+    font-size: 10px;
+  }
+
+  .task-xp {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .delete-task {
+    flex-basis: 31px;
+    width: 31px;
+    min-width: 31px;
+    height: 31px;
+  }
+
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .filter-row {
+    gap: 6px;
+  }
+
+  .filter-chip {
+    min-height: 35px;
+    padding: 8px 11px;
+    font-size: 11px;
+  }
+
+  /* Real calendar weekday and date grid */
+  .calendar-panel {
+    padding: 12px;
+  }
+
+  .calendar-header {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .calendar-header h3 {
+    font-size: 16px;
+  }
+
+  .calendar-weekdays {
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .calendar-weekdays > span {
+    min-height: 31px;
+    padding: 5px 0;
+    border-radius: 7px;
+    font-size: 10px;
+  }
+
+  .calendar-grid,
+  #calendar-days {
+    gap: 4px;
+  }
+
+  #calendar-days > span {
+    min-height: 38px;
+  }
+
+  .calendar-day {
+    min-height: 38px;
+    padding: 3px 1px;
+    border-radius: 8px;
+    font-size: 11px;
+  }
+
+  .calendar-day.has-activity::after {
+    bottom: 3px;
+    width: 9px;
+    height: 3px;
+  }
+
+  .heatmap-panel {
+    padding: 13px;
+  }
+
+  .heatmap-grid {
+    grid-auto-columns: 10px;
+    grid-template-rows: repeat(7, 10px);
+    gap: 3px;
+  }
+
+  .heat-cell {
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+  }
+
+  .heatmap-weekdays {
+    flex-basis: 19px;
+    grid-template-rows: repeat(4, 10px);
+    gap: 3px;
+    font-size: 9px;
+    line-height: 10px;
+  }
+
+  .heatmap-months {
+    padding-left: 25px;
+    font-size: 9px;
+  }
+
+  .heatmap-legend {
+    gap: 4px;
+    font-size: 9px;
+  }
+
+  .heatmap-legend i {
+    width: 9px;
+    height: 9px;
+  }
+
+  .level-row {
+    gap: 12px;
+  }
+
+  .level-orb {
+    flex-basis: 54px;
+    width: 54px;
+    height: 54px;
+    font-size: 21px;
+  }
+
+  .level-row .pill {
+    font-size: 9px;
+  }
+
+  #progress-level {
+    font-size: 25px;
+  }
+
+  #level-next {
+    max-width: 52%;
+    font-size: 11px;
+  }
+
+  .achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .achievement {
+    padding: 12px;
+  }
+
+  .achievement-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+
+  .achievement h3 {
+    font-size: 12px;
+  }
+
+  .achievement p {
+    min-height: 0;
+    font-size: 11px;
+  }
+
+  .achievement small {
+    font-size: 9px;
+  }
+
+  .weekly-row {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .weekly-row strong {
+    font-size: 13px;
+  }
+
+  .timer-display {
+    font-size: clamp(48px, 13vw, 68px);
+  }
+
+  .timer-presets {
+    gap: 6px;
+  }
+
+  .timer-presets .filter-chip {
+    padding-inline: 10px;
+  }
+
+  .bar-chart {
+    gap: 4px;
+  }
+
+  .bar-track {
+    width: min(100%, 29px);
+    height: 94px;
+    min-height: 94px;
+  }
+
+  .bar-value {
+    font-size: 10px;
+  }
+
+  .bar-label {
+    font-size: 9px;
+  }
+
+  .compare-top {
+    align-items: flex-start;
+    gap: 7px;
+  }
+
+  .compare-top strong,
+  .compare-top span {
+    font-size: 11px;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .shop-item {
+    padding: 13px;
+  }
+
+  .shop-item-icon {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 11px;
+    border-radius: 12px;
+    font-size: 20px;
+  }
+
+  .shop-item h3 {
+    font-size: 14px;
+  }
+
+  .shop-item p {
+    font-size: 11px;
+  }
+
+  .shop-price {
+    font-size: 13px;
+  }
+
+  .shop-buy {
+    min-height: 41px;
+    padding: 9px 7px;
+    font-size: 11px;
+  }
+
+  .category-row {
+    padding: 10px;
+  }
+
+  .settings-group {
+    padding: 15px;
+  }
+
+  .settings-group h3 {
+    font-size: 15px;
+  }
+
+  .button-stack {
+    gap: 8px;
+  }
+
+  .bottom-nav {
+    gap: 0;
+    min-height: var(--nav-height);
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .nav-item {
+    gap: 3px;
+    min-height: 47px;
+    padding: 5px 1px;
+    border-radius: 9px;
+  }
+
+  .nav-item > span {
+    font-size: 19px;
+  }
+
+  .nav-item > small {
+    font-size: 9px;
+    letter-spacing: -0.025em;
+  }
+
+  #toast,
+  .toast {
+    bottom: calc(var(--nav-height) + 12px);
+  }
+}
+
+/* ==========================================================
+   30. VERY SMALL PHONES
+   ========================================================== */
+
+@media (max-width: 380px) {
+  .app-shell {
+    width: calc(100% - 16px);
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-actions button {
+    padding-inline: 6px;
+    font-size: 11px;
+  }
+
+  .stat-grid.three {
+    gap: 5px;
+  }
+
+  .stat-grid.three .stat-card {
+    padding: 9px 7px;
+  }
+
+  .stat-grid.three .stat-card > strong {
+    font-size: 19px;
+  }
+
+  .calendar-weekdays {
+    gap: 3px;
+  }
+
+  .calendar-grid,
+  #calendar-days {
+    gap: 3px;
+  }
+
+  .calendar-day {
+    min-height: 35px;
+    font-size: 10px;
+  }
+
+  .shop-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shop-item {
+    padding: 15px;
+  }
+
+  .shop-item-icon {
+    margin-bottom: 9px;
+  }
+
+  .shop-buy {
+    min-height: 43px;
+    font-size: 12px;
+  }
+
+  .achievement-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .achievement p {
+    min-height: 0;
+  }
+
+  .bar-track {
+    height: 82px;
+    min-height: 82px;
+  }
+
+  .bar-chart {
+    gap: 3px;
+  }
+
+  .nav-item > small {
+    font-size: 8px;
+  }
+}
+
+/* ==========================================================
+   31. REDUCED MOTION
+   ========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
