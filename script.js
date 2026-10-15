@@ -1,4 +1,4 @@
-/* DailyApp 3.0 — Command Center + Coin Economy */
+/* DailyApp 3.1 — Command Center + Coin Economy + Motion */
 (function () {
   "use strict";
 
@@ -72,6 +72,9 @@
   var timerInterval = null;
   var timerRunning = false;
   var toastTimer = null;
+  var animationFrameIds = {};
+  var pendingRewardId = null;
+  var previousView = null;
 
   function $(selector) {
     return document.querySelector(selector);
@@ -147,10 +150,451 @@
 
   function setWidth(selector, value) {
     var el = $(selector);
+
     if (el) {
       el.style.width =
         Math.max(0, Math.min(100, Number(value) || 0)) + "%";
     }
+  }
+
+  /* -------------------------------------------------------
+     MOTION SYSTEM
+     Subtle accent glow, number animations, view transitions,
+     and reward modal styles are installed automatically.
+  ------------------------------------------------------- */
+
+  function prefersReducedMotion() {
+    return !!(
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function installMotionStyles() {
+    if ($("#dailyapp-motion-styles")) return;
+
+    var style = document.createElement("style");
+    style.id = "dailyapp-motion-styles";
+
+    style.textContent = `
+      :root {
+        --dailyapp-glow-strength: .075;
+      }
+
+      body {
+        isolation: isolate;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            ellipse at 12% 0%,
+            rgba(var(--accent-rgb, 182,255,0), .075),
+            transparent 48%
+          ),
+          radial-gradient(
+            ellipse at 90% 90%,
+            rgba(var(--accent-rgb, 182,255,0), .045),
+            transparent 42%
+          );
+        opacity: 1;
+        transition: opacity .45s ease;
+      }
+
+      .view {
+        animation-duration: .34s;
+        animation-timing-function: cubic-bezier(.2,.7,.2,1);
+      }
+
+      .view.dailyapp-view-enter {
+        animation-name: dailyappViewEnter;
+      }
+
+      @keyframes dailyappViewEnter {
+        from {
+          opacity: .45;
+          transform: translateY(7px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      #home-xp,
+      #home-coins,
+      #shop-coins,
+      #progress-level,
+      #level-orb,
+      #level-xp-text,
+      #daily-progress-percent {
+        font-variant-numeric: tabular-nums;
+        transition:
+          color .25s ease,
+          text-shadow .25s ease;
+      }
+
+      .dailyapp-number-pop {
+        animation: dailyappNumberPop .36s ease-out;
+      }
+
+      @keyframes dailyappNumberPop {
+        0% { transform: scale(1); }
+        45% {
+          transform: scale(1.075);
+          color: var(--accent, #b6ff00);
+          text-shadow: 0 0 16px rgba(var(--accent-rgb, 182,255,0), .22);
+        }
+        100% { transform: scale(1); }
+      }
+
+      #daily-progress-fill,
+      #level-progress-fill,
+      .achievement [style*="width:"],
+      .compare-bar span,
+      .bar-fill {
+        transition:
+          width .55s cubic-bezier(.2,.7,.2,1),
+          height .55s cubic-bezier(.2,.7,.2,1);
+      }
+
+      .task-card,
+      .shop-history-item,
+      .category-row,
+      .achievement,
+      .compare-metric {
+        transition:
+          border-color .22s ease,
+          background-color .22s ease,
+          transform .22s ease,
+          box-shadow .22s ease;
+      }
+
+      .shop-buy,
+      #custom-reward-open,
+      .nav-item,
+      .bottom-nav [data-view] {
+        transition:
+          transform .2s ease,
+          filter .2s ease,
+          background-color .2s ease;
+      }
+
+      .shop-buy:active,
+      #custom-reward-open:active {
+        transform: scale(.97);
+      }
+
+      #dailyapp-reward-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(0, 0, 0, .64);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .22s ease, visibility .22s ease;
+      }
+
+      #dailyapp-reward-overlay.open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+
+      #dailyapp-reward-modal {
+        width: min(100%, 430px);
+        max-height: min(85vh, 720px);
+        overflow-y: auto;
+        padding: 25px;
+        border: 1px solid rgba(var(--accent-rgb, 182,255,0), .27);
+        border-radius: 23px;
+        background: var(--card, #111411);
+        color: var(--text, #f3f5f0);
+        box-shadow:
+          0 24px 90px rgba(0,0,0,.45),
+          0 0 35px rgba(var(--accent-rgb, 182,255,0), .075);
+        transform: translateY(12px) scale(.975);
+        transition: transform .24s cubic-bezier(.2,.7,.2,1);
+      }
+
+      #dailyapp-reward-overlay.open #dailyapp-reward-modal {
+        transform: translateY(0) scale(1);
+      }
+
+      #dailyapp-reward-modal * {
+        box-sizing: border-box;
+      }
+
+      .dailyapp-modal-kicker {
+        margin: 0 0 8px;
+        color: var(--accent, #b6ff00);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+      }
+
+      .dailyapp-modal-title {
+        margin: 0;
+        font-size: 25px;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+      }
+
+      .dailyapp-modal-description {
+        margin: 10px 0 20px;
+        color: var(--muted, #9da59a);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .dailyapp-reward-icon {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 18px;
+        border-radius: 19px;
+        background: rgba(var(--accent-rgb, 182,255,0), .09);
+        border: 1px solid rgba(var(--accent-rgb, 182,255,0), .18);
+        font-size: 31px;
+      }
+
+      .dailyapp-balance-box {
+        display: grid;
+        gap: 12px;
+        margin: 18px 0 22px;
+        padding: 16px;
+        border-radius: 15px;
+        background: rgba(128,128,128,.075);
+      }
+
+      .dailyapp-balance-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+      }
+
+      .dailyapp-balance-row span {
+        color: var(--muted, #9da59a);
+      }
+
+      .dailyapp-balance-row strong {
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      .dailyapp-balance-row.after strong {
+        color: var(--accent, #b6ff00);
+      }
+
+      .dailyapp-modal-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .dailyapp-modal-button {
+        flex: 1;
+        min-height: 46px;
+        padding: 12px 15px;
+        border: 1px solid rgba(128,128,128,.22);
+        border-radius: 13px;
+        font: inherit;
+        font-weight: 750;
+        cursor: pointer;
+        transition: transform .16s ease, opacity .16s ease;
+      }
+
+      .dailyapp-modal-button:active {
+        transform: scale(.97);
+      }
+
+      .dailyapp-modal-cancel {
+        background: rgba(128,128,128,.09);
+        color: inherit;
+      }
+
+      .dailyapp-modal-confirm {
+        border-color: transparent;
+        background: var(--accent, #b6ff00);
+        color: #10130b;
+      }
+
+      .dailyapp-modal-confirm:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+      }
+
+      .dailyapp-modal-confirm:disabled:active {
+        transform: none;
+      }
+
+      .dailyapp-reward-success {
+        text-align: center;
+      }
+
+      .dailyapp-success-icon {
+        display: grid;
+        place-items: center;
+        width: 78px;
+        height: 78px;
+        margin: 0 auto 19px;
+        border-radius: 50%;
+        background: rgba(var(--accent-rgb, 182,255,0), .12);
+        border: 1px solid rgba(var(--accent-rgb, 182,255,0), .28);
+        color: var(--accent, #b6ff00);
+        font-size: 36px;
+        animation: dailyappSuccessPop .45s cubic-bezier(.2,.8,.2,1);
+      }
+
+      @keyframes dailyappSuccessPop {
+        0% { transform: scale(.55); opacity: 0; }
+        70% { transform: scale(1.09); opacity: 1; }
+        100% { transform: scale(1); }
+      }
+
+      .dailyapp-coin-deduction {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin: 14px auto 0;
+        padding: 8px 13px;
+        border-radius: 999px;
+        color: #ffb1a9;
+        background: rgba(255,100,100,.09);
+        font-weight: 800;
+        animation: dailyappCoinFloat .75s ease-out both;
+      }
+
+      @keyframes dailyappCoinFloat {
+        0% { opacity: 0; transform: translateY(9px) scale(.92); }
+        25% { opacity: 1; }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      .dailyapp-insufficient {
+        color: #ff9b9b;
+        font-size: 13px;
+        line-height: 1.5;
+        margin: -8px 0 17px;
+      }
+
+      @media (max-width: 420px) {
+        #dailyapp-reward-modal {
+          padding: 20px;
+          border-radius: 19px;
+        }
+
+        .dailyapp-modal-title {
+          font-size: 22px;
+        }
+
+        .dailyapp-modal-actions {
+          flex-direction: column-reverse;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: .01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: .01ms !important;
+        }
+
+        body::before {
+          transition: none !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function animateNumber(selector, targetValue) {
+    var el = $(selector);
+    if (!el) return;
+
+    var target = Number(targetValue);
+
+    if (!Number.isFinite(target)) {
+      el.textContent = String(targetValue);
+      return;
+    }
+
+    target = Math.trunc(target);
+
+    if (prefersReducedMotion()) {
+      el.textContent = target.toLocaleString("de-AT");
+      el.setAttribute("data-animated-value", String(target));
+      return;
+    }
+
+    var oldValue = el.getAttribute("data-animated-value");
+
+    if (oldValue === null) {
+      var parsed = Number(String(el.textContent).replace(/[^\d-]/g, ""));
+      oldValue = Number.isFinite(parsed) ? parsed : target;
+    } else {
+      oldValue = Number(oldValue);
+    }
+
+    if (!Number.isFinite(oldValue)) oldValue = target;
+
+    if (animationFrameIds[selector]) {
+      cancelAnimationFrame(animationFrameIds[selector]);
+    }
+
+    if (oldValue === target) {
+      el.textContent = target.toLocaleString("de-AT");
+      el.setAttribute("data-animated-value", String(target));
+      return;
+    }
+
+    var start = performance.now();
+    var difference = target - oldValue;
+    var duration = Math.min(
+      800,
+      Math.max(260, Math.abs(difference) * 1.4)
+    );
+
+    el.classList.remove("dailyapp-number-pop");
+    void el.offsetWidth;
+    el.classList.add("dailyapp-number-pop");
+
+    function step(now) {
+      var progress = Math.min(1, (now - start) / duration);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var current = Math.round(oldValue + difference * eased);
+
+      el.textContent = current.toLocaleString("de-AT");
+
+      if (progress < 1) {
+        animationFrameIds[selector] = requestAnimationFrame(step);
+      } else {
+        el.textContent = target.toLocaleString("de-AT");
+        el.setAttribute("data-animated-value", String(target));
+        delete animationFrameIds[selector];
+      }
+    }
+
+    animationFrameIds[selector] = requestAnimationFrame(step);
   }
 
   function toast(message) {
@@ -480,6 +924,7 @@
     root.style.setProperty("--border", "rgba(" + accent[1] + ", .20)");
 
     var themeColor = $("#theme-color");
+
     if (themeColor) {
       themeColor.setAttribute(
         "content",
@@ -488,6 +933,7 @@
     }
 
     var themeSelect = $("#theme-select");
+
     if (themeSelect) {
       themeSelect.value =
         appearance.theme === "auto" ? "system" : appearance.theme;
@@ -608,6 +1054,7 @@
     if (state.lastDailyRewardDate === today) return false;
 
     state.lastDailyRewardDate = today;
+
     var added = addCoins(
       DAILY_COINS,
       "daily-bonus",
@@ -839,10 +1286,12 @@
     setText("#daily-progress-text", done + " von " + tasks.length + " erledigt");
     setText("#daily-progress-percent", percent + "%");
     setWidth("#daily-progress-fill", percent);
-    setText("#home-xp", totalXP());
+
+    animateNumber("#home-xp", totalXP());
     setText("#home-level", "Level " + level.level);
     setText("#home-streak", streakInfo().current + " Tage");
-    setText("#home-coins", state.coins);
+    animateNumber("#home-coins", state.coins);
+
     setText("#daily-coin-bonus",
       state.lastDailyRewardDate === todayKey()
         ? "✓ Heute erhalten"
@@ -1076,6 +1525,7 @@
         info.level < 6 ? "Building momentum" :
           "Consistency builder"
     );
+
     setWidth("#level-progress-fill", info.inside);
     setText("#level-xp-text", info.inside + " / 100 XP");
     setText("#level-next",
@@ -1086,11 +1536,13 @@
     setText("#progress-focus", state.focusSessions || 0);
 
     if (!Array.isArray(state.unlocked)) state.unlocked = [];
+
     if (!Array.isArray(state.achievementRewardsClaimed)) {
       state.achievementRewardsClaimed = state.unlocked.slice();
     }
 
     var finished = completedTasks();
+
     var customCategories = state.categories.filter(function (cat) {
       return !DEFAULT_CATEGORIES.some(function (base) {
         return base.id === cat.id;
@@ -1102,6 +1554,7 @@
     }, 0);
 
     var activeDays = {};
+
     finished.forEach(function (task) {
       if (task.completedAt) activeDays[task.completedAt] = true;
     });
@@ -1119,6 +1572,7 @@
     }).length;
 
     var todayTasks = tasksForToday();
+
     var todayDone = todayTasks.filter(function (task) {
       return task.done;
     }).length;
@@ -1168,7 +1622,7 @@
           progress: config.value(),
           target: target,
           rarity: rarity,
-          reward: config.rewards[index] ||
+          reward: config.rewards && config.rewards[index] ||
             (index >= 12 ? 1000 : index >= 9 ? 500 :
               index >= 5 ? 200 : index >= 2 ? 75 : 25)
         });
@@ -1453,6 +1907,7 @@
       if (raritySelect) {
         raritySelect.addEventListener("change", renderProgress);
       }
+
       if (statusSelect) {
         statusSelect.addEventListener("change", renderProgress);
       }
@@ -1478,11 +1933,13 @@
 
     if (weekly) {
       var keys = weekKeys(new Date());
+
       var weekTasks = state.tasks.filter(function (task) {
         return task.done && keys.indexOf(task.completedAt) >= 0;
       });
 
       var active = {};
+
       weekTasks.forEach(function (task) {
         active[task.completedAt] = true;
       });
@@ -1538,7 +1995,8 @@
       height + '%"></div></div><span class="bar-label">' +
       escapeHTML(label) + '</span></div>';
   }
-    function renderAnalytics() {
+
+  function renderAnalytics() {
     var today = parseDate(todayKey());
     var start = dateKey(shiftDate(today, -6));
     var previousStart = dateKey(shiftDate(today, -13));
@@ -1615,6 +2073,7 @@
     for (var m = 5; m >= 0; m--) {
       var monthDate = new Date(today.getFullYear(), today.getMonth() - m, 1);
       var monthStart = dateKey(monthDate);
+
       var monthEnd = dateKey(shiftDate(
         new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1),
         -1
@@ -1659,7 +2118,7 @@
   }
 
   function renderShop() {
-    setText("#shop-coins", state.coins);
+    animateNumber("#shop-coins", state.coins);
 
     var history = $("#shop-history");
     if (!history) return;
@@ -1820,44 +2279,203 @@
     toast("Kategorie gelöscht.");
   }
 
+  /* -------------------------------------------------------
+     REWARD CONFIRMATION MODAL
+  ------------------------------------------------------- */
+
+  function ensureRewardModal() {
+    var overlay = $("#dailyapp-reward-overlay");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = "dailyapp-reward-overlay";
+    overlay.setAttribute("role", "presentation");
+
+    overlay.innerHTML =
+      '<section id="dailyapp-reward-modal" role="dialog" ' +
+      'aria-modal="true" aria-labelledby="dailyapp-reward-title">' +
+        '<div id="dailyapp-reward-content"></div>' +
+      '</section>';
+
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) closeRewardModal();
+    });
+
+    return overlay;
+  }
+
+  function openRewardModal(reward) {
+    var overlay = ensureRewardModal();
+    var content = $("#dailyapp-reward-content");
+
+    if (!content || !reward) return;
+
+    pendingRewardId = reward.id;
+
+    var cost = clampNumber(reward.cost, 1, MAX_REWARD_COST, 1);
+    var balance = state.coins;
+    var canAfford = balance >= cost;
+    var after = Math.max(0, balance - cost);
+
+    content.innerHTML =
+      '<div class="dailyapp-reward-icon">' +
+        escapeHTML(reward.icon || "🎁") +
+      '</div>' +
+      '<p class="dailyapp-modal-kicker">Reward einlösen</p>' +
+      '<h2 class="dailyapp-modal-title" id="dailyapp-reward-title">' +
+        escapeHTML(reward.name) +
+      '</h2>' +
+      '<p class="dailyapp-modal-description">' +
+        escapeHTML(reward.description || "Deine ausgewählte Belohnung.") +
+        '<br><strong>' + reward.minutes +
+        ' Minuten Freizeit</strong>' +
+      '</p>' +
+      '<div class="dailyapp-balance-box">' +
+        '<div class="dailyapp-balance-row">' +
+          '<span>Aktueller Kontostand</span>' +
+          '<strong>' + balance.toLocaleString("de-AT") + ' ◈</strong>' +
+        '</div>' +
+        '<div class="dailyapp-balance-row">' +
+          '<span>Reward-Kosten</span>' +
+          '<strong>−' + cost.toLocaleString("de-AT") + ' ◈</strong>' +
+        '</div>' +
+        '<div class="dailyapp-balance-row after">' +
+          '<span>Danach übrig</span>' +
+          '<strong>' + after.toLocaleString("de-AT") + ' ◈</strong>' +
+        '</div>' +
+      '</div>' +
+      (canAfford ? "" :
+        '<p class="dailyapp-insufficient">Dir fehlen ' +
+          (cost - balance).toLocaleString("de-AT") +
+          ' Coins. Du kannst diesen Reward momentan nicht einlösen.</p>') +
+      '<div class="dailyapp-modal-actions">' +
+        '<button type="button" id="reward-modal-cancel" ' +
+          'class="dailyapp-modal-button dailyapp-modal-cancel">' +
+          'Abbrechen' +
+        '</button>' +
+        '<button type="button" id="reward-modal-confirm" ' +
+          'class="dailyapp-modal-button dailyapp-modal-confirm" ' +
+          (canAfford ? "" : "disabled") + '>' +
+          (canAfford ? "Jetzt einlösen" : "Zu wenig Coins") +
+        '</button>' +
+      '</div>';
+
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+
+    var cancelButton = $("#reward-modal-cancel");
+    if (cancelButton) cancelButton.focus();
+  }
+
+  function closeRewardModal() {
+    var overlay = $("#dailyapp-reward-overlay");
+
+    pendingRewardId = null;
+
+    if (overlay) overlay.classList.remove("open");
+
+    document.body.style.overflow = "";
+  }
+
+  function showRewardSuccess(reward, oldBalance, newBalance, cost) {
+    var overlay = ensureRewardModal();
+    var content = $("#dailyapp-reward-content");
+
+    if (!content) return;
+
+    pendingRewardId = null;
+
+    content.innerHTML =
+      '<div class="dailyapp-reward-success">' +
+        '<div class="dailyapp-success-icon">✓</div>' +
+        '<p class="dailyapp-modal-kicker">Einlösung erfolgreich</p>' +
+        '<h2 class="dailyapp-modal-title" id="dailyapp-reward-title">' +
+          escapeHTML(reward.name) +
+        '</h2>' +
+        '<p class="dailyapp-modal-description">' +
+          'Deine Belohnung ist jetzt in deinem Shop-Verlauf gespeichert.' +
+        '</p>' +
+        '<div class="dailyapp-balance-box">' +
+          '<div class="dailyapp-balance-row">' +
+            '<span>Freizeit freigeschaltet</span>' +
+            '<strong>' + reward.minutes + ' Minuten</strong>' +
+          '</div>' +
+          '<div class="dailyapp-balance-row">' +
+            '<span>Vorher</span>' +
+            '<strong>' + oldBalance.toLocaleString("de-AT") + ' ◈</strong>' +
+          '</div>' +
+          '<div class="dailyapp-balance-row after">' +
+            '<span>Neuer Kontostand</span>' +
+            '<strong>' + newBalance.toLocaleString("de-AT") + ' ◈</strong>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dailyapp-coin-deduction">🪙 −' +
+          cost.toLocaleString("de-AT") + ' Coins</div>' +
+        '<div class="dailyapp-modal-actions" style="margin-top:23px">' +
+          '<button type="button" id="reward-modal-close" ' +
+            'class="dailyapp-modal-button dailyapp-modal-confirm">' +
+            'Alles klar' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+
+    overlay.classList.add("open");
+
+    var closeButton = $("#reward-modal-close");
+    if (closeButton) closeButton.focus();
+  }
+
   function buyReward(rewardId) {
     var reward = state.rewards.find(function (item) {
       return item.id === rewardId;
     });
 
     if (!reward) {
-      toast("Diese Reward wurde nicht gefunden.");
+      toast("Dieser Reward wurde nicht gefunden.");
+      return;
+    }
+
+    openRewardModal(reward);
+  }
+
+  function confirmRewardPurchase() {
+    if (!pendingRewardId) return;
+
+    var reward = state.rewards.find(function (item) {
+      return item.id === pendingRewardId;
+    });
+
+    if (!reward) {
+      closeRewardModal();
+      toast("Dieser Reward wurde nicht gefunden.");
       return;
     }
 
     var cost = clampNumber(reward.cost, 1, MAX_REWARD_COST, 1);
 
     if (state.coins < cost) {
+      openRewardModal(reward);
       toast("Nicht genug Coins. Dir fehlen " + (cost - state.coins) + ".");
       return;
     }
 
-    if (!window.confirm(
-      '"' + reward.name + '" für ' + cost + ' Coins einlösen?'
-    )) return;
+    var oldBalance = state.coins;
+    var newBalance = oldBalance - cost;
+    var now = new Date().toISOString();
 
-    if (state.coins < cost) {
-      toast("Dein Guthaben reicht nicht mehr aus.");
-      return;
-    }
+    state.coins = newBalance;
 
-    state.coins -= cost;
-
-    var transaction = {
+    state.coinTransactions.push({
       id: makeId(),
       type: "shop-purchase",
       amount: -cost,
       description: "Reward eingelöst: " + reward.name,
       date: todayKey(),
-      createdAt: new Date().toISOString()
-    };
+      createdAt: now
+    });
 
-    state.coinTransactions.push(transaction);
     state.coinTransactions = state.coinTransactions.slice(-500);
 
     state.shopHistory.push({
@@ -1867,14 +2485,17 @@
       minutes: reward.minutes,
       cost: cost,
       date: todayKey(),
-      createdAt: new Date().toISOString()
+      createdAt: now
     });
 
     state.shopHistory = state.shopHistory.slice(-200);
 
+    pendingRewardId = null;
+
     save();
     renderAll();
-    toast("Reward eingelöst! Gönn dir deine Freizeit. ◈");
+
+    showRewardSuccess(reward, oldBalance, newBalance, cost);
   }
 
   function openCustomReward() {
@@ -1904,7 +2525,7 @@
     var cost = Number(costInput.value);
 
     if (!name) {
-      toast("Bitte gib deiner Reward einen Namen.");
+      toast("Bitte gib deinem Reward einen Namen.");
       nameInput.focus();
       return;
     }
@@ -1941,9 +2562,10 @@
     nameInput.value = "";
     minutesInput.value = "30";
     costInput.value = "60";
+
     closeCustomReward();
     renderAll();
-    toast("Eigene Reward erstellt.");
+    toast("Eigener Reward erstellt.");
   }
 
   function go(view) {
@@ -1954,9 +2576,21 @@
       return;
     }
 
+    var current = $(".view.active");
+
+    if (current && current !== page) {
+      previousView = current.id;
+    }
+
     $$(".view").forEach(function (item) {
       item.classList.toggle("active", item === page);
+      item.classList.remove("dailyapp-view-enter");
     });
+
+    if (!prefersReducedMotion()) {
+      void page.offsetWidth;
+      page.classList.add("dailyapp-view-enter");
+    }
 
     $$(".bottom-nav [data-view]").forEach(function (button) {
       button.classList.toggle(
@@ -1973,7 +2607,10 @@
     if (view === "analytics") renderAnalytics();
     if (view === "shop") renderShop();
 
-    window.scrollTo(0, 0);
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion() ? "auto" : "smooth"
+    });
   }
 
   function updateTimerDisplay() {
@@ -2139,6 +2776,17 @@
     var target = event.target;
 
     if (!target || !target.closest) return;
+
+    if (target.closest("#reward-modal-cancel") ||
+        target.closest("#reward-modal-close")) {
+      closeRewardModal();
+      return;
+    }
+
+    if (target.closest("#reward-modal-confirm")) {
+      confirmRewardPurchase();
+      return;
+    }
 
     var nav = target.closest("[data-view]");
 
@@ -2347,9 +2995,17 @@
   }
 
   function init() {
+    installMotionStyles();
+
     document.addEventListener("click", handleClick);
     document.addEventListener("submit", handleSubmit);
     document.addEventListener("change", handleChange);
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && $("#dailyapp-reward-overlay.open")) {
+        closeRewardModal();
+      }
+    });
 
     window.addEventListener("pageshow", function () {
       try {
@@ -2381,7 +3037,7 @@
         }
       }
 
-      console.log("DailyApp 3.0 ready.");
+      console.log("DailyApp 3.1 ready.");
     } catch (error) {
       console.error("DailyApp could not start:", error);
 
@@ -2401,4 +3057,3 @@
     init();
   }
 })();
-  
