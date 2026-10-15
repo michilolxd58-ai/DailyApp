@@ -1,4 +1,3 @@
-
 /* DailyApp 3.0 — Command Center + Coin Economy */
 (function () {
   "use strict";
@@ -17,20 +16,14 @@
   ];
 
   var TASK_POOL = [
-    "Make your bed",
-    "Drink a glass of water",
-    "Read for 10 minutes",
-    "Tidy your desk for 5 minutes",
-    "Take a short walk",
-    "Stretch for 5 minutes",
-    "Write down your top priority",
-    "Review your notes",
+    "Make your bed", "Drink a glass of water",
+    "Read for 10 minutes", "Tidy your desk for 5 minutes",
+    "Take a short walk", "Stretch for 5 minutes",
+    "Write down your top priority", "Review your notes",
     "Prepare your bag for tomorrow",
-    "Learn one new coding concept",
-    "Finish a small school task",
+    "Learn one new coding concept", "Finish a small school task",
     "Put your phone away for 20 minutes",
-    "Plan tomorrow's first task",
-    "Clean one small area",
+    "Plan tomorrow's first task", "Clean one small area",
     "Practice a skill for 15 minutes",
     "Spend 10 minutes learning something"
   ];
@@ -40,25 +33,19 @@
       id: "gaming30",
       name: "Gaming Time",
       description: "30 Minuten geplante Gaming-Freizeit.",
-      minutes: 30,
-      cost: 60,
-      icon: "🎮"
+      minutes: 30, cost: 60, icon: "🎮"
     },
     {
       id: "chill60",
       name: "Chill Mode",
       description: "60 Minuten frei verfügbare Freizeit.",
-      minutes: 60,
-      cost: 100,
-      icon: "🌙"
+      minutes: 60, cost: 100, icon: "🌙"
     },
     {
       id: "break90",
       name: "Long Break",
       description: "90 Minuten bewusst eingeplante Freizeit.",
-      minutes: 90,
-      cost: 140,
-      icon: "🧘"
+      minutes: 90, cost: 140, icon: "🧘"
     }
   ];
 
@@ -204,6 +191,7 @@
       bonusCompleted: 0,
       focusSessions: 0,
       unlocked: [],
+      achievementRewardsClaimed: [],
       coins: 0,
       lastDailyRewardDate: "",
       coinTransactions: [],
@@ -216,9 +204,7 @@
     var item = {
       id: String(task.id || makeId()).slice(0, 100),
       text: String(task.text || "Task").slice(0, 120),
-      created: isDateKey(task.created)
-        ? task.created
-        : todayKey(),
+      created: isDateKey(task.created) ? task.created : todayKey(),
       done: Boolean(task.done),
       completedAt: isDateKey(task.completedAt)
         ? task.completedAt
@@ -243,8 +229,6 @@
       item.coinReward = clampNumber(task.coinReward, 0, 1000, 0);
     }
 
-    // Legacy tasks may not have a reward flag.
-    // Already-completed tasks are marked as rewarded during migration.
     item.rewardClaimed = task.rewardClaimed === undefined
       ? Boolean(task.done)
       : Boolean(task.rewardClaimed);
@@ -343,11 +327,7 @@
       })
       .slice(0, 10000)
       .map(function (task) {
-        return normalizeTask(
-          task,
-          categoryIds,
-          categories[0].id
-        );
+        return normalizeTask(task, categoryIds, categories[0].id);
       });
 
     var plans = {};
@@ -421,6 +401,12 @@
             return typeof id === "string";
           }).slice(0, 100)
         : [],
+      achievementRewardsClaimed:
+        Array.isArray(raw.achievementRewardsClaimed)
+          ? raw.achievementRewardsClaimed.filter(function (id) {
+              return typeof id === "string";
+            }).slice(0, 100)
+          : (Array.isArray(raw.unlocked) ? raw.unlocked.slice(0, 100) : []),
       coins: clampNumber(raw.coins, 0, MAX_COINS, 0),
       lastDailyRewardDate: isDateKey(raw.lastDailyRewardDate)
         ? raw.lastDailyRewardDate
@@ -454,10 +440,7 @@
           accent: saved.accent === "mint"
             ? "toxic"
             : (
-              Object.prototype.hasOwnProperty.call(
-                ACCENTS,
-                saved.accent
-              )
+              Object.prototype.hasOwnProperty.call(ACCENTS, saved.accent)
                 ? saved.accent
                 : "toxic"
             )
@@ -494,10 +477,7 @@
     root.style.setProperty("--toxic", accent[0]);
     root.style.setProperty("--toxic-bright", accent[0]);
     root.style.setProperty("--toxic-rgb", accent[1]);
-    root.style.setProperty(
-      "--border",
-      "rgba(" + accent[1] + ", .20)"
-    );
+    root.style.setProperty("--border", "rgba(" + accent[1] + ", .20)");
 
     var themeColor = $("#theme-color");
     if (themeColor) {
@@ -508,7 +488,6 @@
     }
 
     var themeSelect = $("#theme-select");
-
     if (themeSelect) {
       themeSelect.value =
         appearance.theme === "auto" ? "system" : appearance.theme;
@@ -572,7 +551,6 @@
       return clampNumber(task.coinReward, 0, 1000, 0);
     }
 
-    // Base coin rewards are smaller than XP rewards.
     return Math.max(1, Math.min(25, Math.ceil(taskXP(task) / 2)));
   }
 
@@ -629,8 +607,6 @@
 
     if (state.lastDailyRewardDate === today) return false;
 
-    // Record the date before saving, preventing repeated grants
-    // during ordinary refreshes of the same local calendar day.
     state.lastDailyRewardDate = today;
     var added = addCoins(
       DAILY_COINS,
@@ -640,9 +616,7 @@
 
     save();
 
-    if (added) {
-      toast("Tagesbonus: +" + DAILY_COINS + " Coins!");
-    }
+    if (added) toast("Tagesbonus: +" + DAILY_COINS + " Coins!");
 
     return added;
   }
@@ -662,10 +636,7 @@
 
       while (chosen.length < amount && pool.length) {
         chosen.push(
-          pool.splice(
-            Math.floor(Math.random() * pool.length),
-            1
-          )[0]
+          pool.splice(Math.floor(Math.random() * pool.length), 1)[0]
         );
       }
 
@@ -787,19 +758,15 @@
 
   function countDoneBetween(start, end) {
     return state.tasks.filter(function (task) {
-      return task.done &&
-        task.completedAt &&
-        task.completedAt >= start &&
-        task.completedAt <= end;
+      return task.done && task.completedAt &&
+        task.completedAt >= start && task.completedAt <= end;
     }).length;
   }
 
   function xpBetween(start, end) {
     return state.tasks.filter(function (task) {
-      return task.done &&
-        task.completedAt &&
-        task.completedAt >= start &&
-        task.completedAt <= end;
+      return task.done && task.completedAt &&
+        task.completedAt >= start && task.completedAt <= end;
     }).reduce(function (sum, task) {
       return sum + taskXP(task);
     }, 0);
@@ -815,8 +782,7 @@
           : "Hinzugefügt " + task.created);
 
     var html =
-      '<article class="task-card ' +
-      (task.done ? "done" : "") + '">';
+      '<article class="task-card ' + (task.done ? "done" : "") + '">';
 
     html +=
       '<button type="button" class="task-check" ' +
@@ -850,10 +816,7 @@
       return task.done;
     }).length;
 
-    var percent = tasks.length
-      ? Math.round(done / tasks.length * 100)
-      : 0;
-
+    var percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
     var level = levelInfo(totalXP());
     var dateEl = $("#home-date");
 
@@ -1098,7 +1061,6 @@
     }
   }
 
-
   function renderProgress() {
     var xp = totalXP();
     var info = levelInfo(xp);
@@ -1123,10 +1085,8 @@
       (total ? Math.round(done / total * 100) : 0) + "%");
     setText("#progress-focus", state.focusSessions || 0);
 
-    // Keep achievement rewards permanently recorded.
     if (!Array.isArray(state.unlocked)) state.unlocked = [];
     if (!Array.isArray(state.achievementRewardsClaimed)) {
-      // Existing unlocked achievements are treated as already claimed.
       state.achievementRewardsClaimed = state.unlocked.slice();
     }
 
@@ -1183,7 +1143,6 @@
       config.targets.forEach(function (target, index) {
         var id = config.prefix + target;
 
-        // Preserve IDs from the original ten achievements.
         if (config.prefix === "tasks-" && target === 1) id = "first";
         if (config.prefix === "tasks-" && target === 5) id = "five";
         if (config.prefix === "tasks-" && target === 25) id = "twentyfive";
@@ -1216,7 +1175,6 @@
       });
     }
 
-    // 1–15: completed tasks.
     addMilestones({
       prefix: "tasks-",
       icon: "🏆",
@@ -1233,7 +1191,6 @@
         800, 1000, 1500, 2000, 2500]
     });
 
-    // 16–30: XP collected.
     addMilestones({
       prefix: "xp-",
       icon: "✨",
@@ -1246,7 +1203,6 @@
       }
     });
 
-    // 31–40: best streak.
     addMilestones({
       prefix: "streak-",
       icon: "🔥",
@@ -1258,7 +1214,6 @@
       }
     });
 
-    // 41–50: focus sessions.
     addMilestones({
       prefix: "focus-",
       icon: "⏱️",
@@ -1270,7 +1225,6 @@
       }
     });
 
-    // 51–60: lifetime positive coin earnings.
     addMilestones({
       prefix: "coins-",
       icon: "🪙",
@@ -1285,7 +1239,6 @@
       }
     });
 
-    // 61–70: shop rewards redeemed.
     addMilestones({
       prefix: "shop-",
       icon: "🎁",
@@ -1297,7 +1250,6 @@
       }
     });
 
-    // 71–80: custom categories.
     addMilestones({
       prefix: "category-",
       icon: "🛠️",
@@ -1309,7 +1261,6 @@
       }
     });
 
-    // 81–90: daily-plan tasks completed.
     addMilestones({
       prefix: "dailyplan-",
       icon: "📅",
@@ -1321,7 +1272,6 @@
       }
     });
 
-    // 91–100: special and secret achievements.
     [
       {
         id: "special-perfect-day",
@@ -1329,9 +1279,7 @@
         name: "Perfect Day",
         desc: "Erledige alle heutigen Aufgaben.",
         progress: todayTasks.length > 0 && todayDone === todayTasks.length ? 1 : 0,
-        target: 1,
-        reward: 150,
-        rarity: "epic"
+        target: 1, reward: 150, rarity: "epic"
       },
       {
         id: "special-active-days",
@@ -1339,9 +1287,7 @@
         name: "Active Week",
         desc: "Sei an mindestens 7 verschiedenen Tagen aktiv.",
         progress: Object.keys(activeDays).length,
-        target: 7,
-        reward: 100,
-        rarity: "rare"
+        target: 7, reward: 100, rarity: "rare"
       },
       {
         id: "special-weekend",
@@ -1349,9 +1295,7 @@
         name: "Weekend Warrior",
         desc: "Erledige 10 Aufgaben am Wochenende.",
         progress: weekendCount,
-        target: 10,
-        reward: 200,
-        rarity: "epic"
+        target: 10, reward: 200, rarity: "epic"
       },
       {
         id: "special-all-categories",
@@ -1359,9 +1303,7 @@
         name: "All-Rounder",
         desc: "Erledige Aufgaben in allen vier Standard-Kategorien.",
         progress: categoriesUsed,
-        target: 4,
-        reward: 250,
-        rarity: "legendary"
+        target: 4, reward: 250, rarity: "legendary"
       },
       {
         id: "special-wallet",
@@ -1369,9 +1311,7 @@
         name: "Coin Reserve",
         desc: "Halte mindestens 1.000 Coins gleichzeitig.",
         progress: state.coins,
-        target: 1000,
-        reward: 100,
-        rarity: "rare"
+        target: 1000, reward: 100, rarity: "rare"
       },
       {
         id: "special-task-collection",
@@ -1379,9 +1319,7 @@
         name: "Task Collector",
         desc: "Habe mindestens 50 Aufgaben gespeichert.",
         progress: state.tasks.length,
-        target: 50,
-        reward: 100,
-        rarity: "rare"
+        target: 50, reward: 100, rarity: "rare"
       },
       {
         id: "secret-daily-master",
@@ -1389,10 +1327,7 @@
         name: "Daily Master",
         desc: "Schließe 100 tägliche Plan-Aufgaben ab.",
         progress: dailyDone,
-        target: 100,
-        reward: 500,
-        rarity: "secret",
-        secret: true
+        target: 100, reward: 500, rarity: "secret", secret: true
       },
       {
         id: "secret-five-today",
@@ -1400,10 +1335,7 @@
         name: "Power Day",
         desc: "Erledige an einem Tag mindestens 5 Aufgaben.",
         progress: todayDone,
-        target: 5,
-        reward: 200,
-        rarity: "secret",
-        secret: true
+        target: 5, reward: 200, rarity: "secret", secret: true
       },
       {
         id: "secret-focus-legend",
@@ -1411,10 +1343,7 @@
         name: "Focus Legend",
         desc: "Schließe 100 Fokus-Sessions ab.",
         progress: state.focusSessions || 0,
-        target: 100,
-        reward: 500,
-        rarity: "secret",
-        secret: true
+        target: 100, reward: 500, rarity: "secret", secret: true
       },
       {
         id: "secret-coin-millionaire",
@@ -1422,14 +1351,10 @@
         name: "Coin Millionaire",
         desc: "Verdiene insgesamt 50.000 Coins.",
         progress: earnedCoins,
-        target: 50000,
-        reward: 1000,
-        rarity: "secret",
-        secret: true
+        target: 50000, reward: 1000, rarity: "secret", secret: true
       }
     ].forEach(addAchievement);
 
-    // Ensure old IDs are preserved, and reward each achievement once.
     var newUnlocks = [];
 
     achievements.forEach(function (item) {
@@ -1448,7 +1373,6 @@
       }
     });
 
-    // Keep saved arrays within their storage limits.
     state.unlocked = Array.from(new Set(state.unlocked)).slice(-100);
     state.achievementRewardsClaimed =
       Array.from(new Set(state.achievementRewardsClaimed)).slice(-100);
@@ -1597,10 +1521,6 @@
     save();
 
     if (newUnlocks.length) {
-      var rewards = newUnlocks.reduce(function (sum, item) {
-        return sum + item.reward;
-      }, 0);
-
       toast(newUnlocks.length === 1
         ? "Achievement freigeschaltet: " + newUnlocks[0].name +
           " · +" + newUnlocks[0].reward + " Coins!"
@@ -1618,87 +1538,7 @@
       height + '%"></div></div><span class="bar-label">' +
       escapeHTML(label) + '</span></div>';
   }
-
-    state.unlocked = achievements.filter(function (item) {
-      return item.done;
-    }).map(function (item) {
-      return item.id;
-    });
-
-    var achievementGrid = $("#achievements");
-
-    if (achievementGrid) {
-      achievementGrid.innerHTML = achievements.map(function (item) {
-        return '<article class="achievement ' +
-          (item.done ? "unlocked" : "locked") +
-          '"><div class="achievement-icon">' + item.icon +
-          '</div><h3>' + escapeHTML(item.name) +
-          '</h3><p>' + escapeHTML(item.desc) +
-          '</p><small>' + (item.done ? "UNLOCKED" : "LOCKED") +
-          '</small></article>';
-      }).join("");
-    }
-
-    var weekly = $("#weekly-report");
-
-    if (weekly) {
-      var keys = weekKeys(new Date());
-      var weekTasks = state.tasks.filter(function (task) {
-        return task.done && keys.indexOf(task.completedAt) >= 0;
-      });
-
-      var activeDays = {};
-
-      weekTasks.forEach(function (task) {
-        activeDays[task.completedAt] = true;
-      });
-
-      weekly.innerHTML =
-        '<div class="weekly-row"><span>Aufgaben diese Woche</span><strong>' +
-        weekTasks.length + '</strong></div>' +
-        '<div class="weekly-row"><span>XP diese Woche</span><strong>' +
-        weekTasks.reduce(function (sum, task) {
-          return sum + taskXP(task);
-        }, 0) + '</strong></div>' +
-        '<div class="weekly-row"><span>Aktive Tage</span><strong>' +
-        Object.keys(activeDays).length + '/7</strong></div>' +
-        '<div class="weekly-row"><span>Aktuelle Serie</span><strong>' +
-        streakInfo().current + ' Tage</strong></div>' +
-        '<div class="weekly-row"><span>Beste Serie</span><strong>' +
-        streakInfo().best + ' Tage</strong></div>';
-    }
-
-    var recent = $("#recent-activity");
-
-    if (recent) {
-      var activity = completedTasks().sort(function (a, b) {
-        return String(b.completedAt || "").localeCompare(
-          String(a.completedAt || "")
-        );
-      }).slice(0, 8);
-
-      recent.innerHTML = activity.length
-        ? activity.map(function (task) {
-            return taskHTML(task, false);
-          }).join("")
-        : '<div class="empty-state">Erledige eine Aufgabe, um deine Aktivität zu sehen.</div>';
-    }
-
-    save();
-  }
-
-  function barHTML(label, value, max) {
-    var height = max > 0 ? Math.max(0, value / max * 100) : 0;
-
-    return '<div class="bar-col" title="' +
-      escapeHTML(label) + ': ' + value +
-      '"><span class="bar-value">' + value +
-      '</span><div class="bar-track"><div class="bar-fill" style="height:' +
-      height + '%"></div></div><span class="bar-label">' +
-      escapeHTML(label) + '</span></div>';
-  }
-
-  function renderAnalytics() {
+    function renderAnalytics() {
     var today = parseDate(todayKey());
     var start = dateKey(shiftDate(today, -6));
     var previousStart = dateKey(shiftDate(today, -13));
@@ -1885,9 +1725,6 @@
     if (task.done) {
       task.done = false;
       task.completedAt = null;
-
-      // Do not revoke already earned rewards. The same task
-      // cannot be farmed by toggling it repeatedly.
       task.rewardClaimed = true;
 
       save();
@@ -1971,7 +1808,6 @@
     state.tasks.forEach(function (task) {
       if (task.category === id) {
         task.category = "daily";
-        // Keep the original earned XP/coin reward for existing tasks.
       }
     });
 
@@ -2005,7 +1841,6 @@
       '"' + reward.name + '" für ' + cost + ' Coins einlösen?'
     )) return;
 
-    // Re-check balance immediately before spending.
     if (state.coins < cost) {
       toast("Dein Guthaben reicht nicht mehr aus.");
       return;
@@ -2270,9 +2105,6 @@
 
         state = loadState();
         ensureDailyTasks();
-
-        // If the imported backup is from an earlier version,
-        // today's daily reward is still applied only if its date is absent.
         awardDailyCoins();
 
         renderAll();
@@ -2569,3 +2401,4 @@
     init();
   }
 })();
+  
