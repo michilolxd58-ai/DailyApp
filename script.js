@@ -1608,6 +1608,17 @@
     }
   }
 
+  function barHTML(label, value, max) {
+    var height = max > 0 ? Math.max(0, value / max * 100) : 0;
+
+    return '<div class="bar-col" title="' +
+      escapeHTML(label) + ': ' + value +
+      '"><span class="bar-value">' + value +
+      '</span><div class="bar-track"><div class="bar-fill" style="height:' +
+      height + '%"></div></div><span class="bar-label">' +
+      escapeHTML(label) + '</span></div>';
+  }
+
     state.unlocked = achievements.filter(function (item) {
       return item.done;
     }).map(function (item) {
