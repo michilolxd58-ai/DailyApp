@@ -2894,3 +2894,69 @@ textarea:focus {
     transition: none !important;
   }
 }
+
+/* ==================================================
+   DailyApp — Fix: Kalender-Balken
+   Monats- und Wochenansicht
+   ================================================== */
+
+#view-calendar .event-bar,
+#view-calendar .calendar-bar,
+#view-calendar .calendar-event-bar,
+#view-calendar .calendar-day-bar,
+#view-calendar .task-bar,
+#view-calendar .week-bar,
+#view-calendar .month-bar,
+#view-calendar .week-event,
+#view-calendar .month-event,
+#view-calendar .calendar-event,
+#view-calendar .calendar-task {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  max-width: 100%;
+  border-radius: 5px;
+}
+
+/* Kleine farbige Balken */
+#view-calendar .event-bar,
+#view-calendar .calendar-bar,
+#view-calendar .calendar-event-bar,
+#view-calendar .calendar-day-bar,
+#view-calendar .task-bar,
+#view-calendar .week-bar,
+#view-calendar .month-bar {
+  min-height: 5px;
+}
+
+/* Monats- und Wochenraster nicht abschneiden */
+#view-calendar .calendar-grid,
+#view-calendar .calendar-days,
+#view-calendar #calendar-grid {
+  min-width: 0;
+}
+
+/* Balken sollen ihre vorhandenen Farben behalten */
+#view-calendar .event-bar,
+#view-calendar .calendar-bar,
+#view-calendar .calendar-event-bar,
+#view-calendar .calendar-day-bar,
+#view-calendar .task-bar,
+#view-calendar .week-bar,
+#view-calendar .month-bar {
+  overflow: visible;
+}
+
+/* Kleine Displays */
+@media (max-width: 600px) {
+  #view-calendar .event-bar,
+  #view-calendar .calendar-bar,
+  #view-calendar .calendar-event-bar,
+  #view-calendar .calendar-day-bar,
+  #view-calendar .task-bar,
+  #view-calendar .week-bar,
+  #view-calendar .month-bar {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
