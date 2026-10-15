@@ -1,50 +1,64 @@
 
 /* ==========================================================
-   DailyApp 3.0 — Minimal Premium Design
-   Clean • Responsive • Dynamic Accent • Dark / Light Mode
+   DailyApp 3.0 — Refined Green Edition
+   Minimal • Premium • Clear Cards • Yellow Coins
    ========================================================== */
 
-/* ---------- 1. Design variables ---------- */
+/* ==================== 1. VARIABLES ==================== */
 
 :root {
   color-scheme: dark;
 
-  --bg: #080a08;
-  --surface: #101310;
-  --surface-2: #151915;
-  --surface-3: #1b211b;
-  --surface-hover: #202720;
+  --bg: #080e09;
+  --surface: #101a12;
+  --surface-2: #142016;
+  --surface-3: #1b2a1e;
+  --surface-hover: #223326;
 
-  --text: #f0f3ed;
-  --muted: #929b90;
-  --muted-2: #b5beb2;
+  --text: #e2ecdf;
+  --muted: #91a18f;
+  --muted-2: #bacab7;
 
-  --border: rgba(255, 255, 255, 0.075);
-  --border-hover: rgba(255, 255, 255, 0.14);
+  --border: rgba(137, 183, 126, 0.15);
+  --border-hover: rgba(154, 211, 137, 0.28);
+  --border-strong: rgba(154, 211, 137, 0.22);
 
+  /* Dynamische Accent-Farbe aus den App-Einstellungen */
   --accent: #b6ff00;
-  --accent-bright: #caff36;
+  --accent-bright: #caff45;
   --accent-rgb: 182, 255, 0;
 
-  /* Compatibility with existing DailyApp styles */
-  --mint: var(--accent, #b6ff00);
-  --blue: var(--accent, #b6ff00);
-  --toxic: var(--accent, #b6ff00);
-  --toxic-bright: var(--accent-bright, #caff36);
-  --toxic-rgb: var(--accent-rgb, 182, 255, 0);
+  /* Coins behalten immer ihren gelben Farbton */
+  --coin-color: #f4ca58;
+  --coin-bright: #ffdc78;
+  --coin-rgb: 244, 202, 88;
 
-  --danger: #ff6868;
-  --success: #65dc9b;
-  --warning: #f2c66d;
+  --danger: #f07872;
+  --success: #73d69a;
+  --warning: #efc66f;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
-  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.16);
-  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.24);
+  /* Kompatibilität mit bisherigen DailyApp-Styles */
+  --mint: var(--accent);
+  --blue: var(--accent);
+  --toxic: var(--accent);
+  --toxic-bright: var(--accent-bright);
+  --toxic-rgb: var(--accent-rgb);
+
+  --shadow-sm:
+    0 3px 10px rgba(0, 0, 0, 0.13),
+    inset 0 1px 0 rgba(190, 230, 180, 0.018);
+
+  --shadow-md:
+    0 8px 24px rgba(0, 0, 0, 0.19),
+    inset 0 1px 0 rgba(190, 230, 180, 0.025);
+
+  --shadow-lg:
+    0 18px 48px rgba(0, 0, 0, 0.30);
 
   --radius-sm: 10px;
-  --radius-md: 15px;
-  --radius-lg: 21px;
-  --radius-xl: 27px;
+  --radius-md: 14px;
+  --radius-lg: 19px;
+  --radius-xl: 24px;
 
   --content-width: 1180px;
   --nav-height: 76px;
@@ -57,31 +71,39 @@
     Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* ==================== 2. LIGHT THEME ==================== */
+
 html[data-theme="light"],
 html.light,
 body.light,
 body[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f4f6f2;
-  --surface: #ffffff;
-  --surface-2: #f8faf6;
-  --surface-3: #edf1e9;
-  --surface-hover: #e9eee4;
+  --bg: #edf3e9;
+  --surface: #f8fbf5;
+  --surface-2: #eff5eb;
+  --surface-3: #e4eddf;
+  --surface-hover: #dce8d6;
 
-  --text: #20251e;
-  --muted: #747d70;
-  --muted-2: #566050;
+  --text: #253326;
+  --muted: #71816e;
+  --muted-2: #52654f;
 
-  --border: rgba(30, 40, 25, 0.09);
-  --border-hover: rgba(30, 40, 25, 0.17);
+  --border: rgba(55, 94, 47, 0.15);
+  --border-hover: rgba(55, 110, 45, 0.27);
+  --border-strong: rgba(55, 110, 45, 0.22);
 
-  --shadow-sm: 0 2px 8px rgba(35, 45, 30, 0.035);
-  --shadow-md: 0 8px 28px rgba(35, 45, 30, 0.055);
-  --shadow-lg: 0 18px 48px rgba(35, 45, 30, 0.08);
+  --shadow-sm:
+    0 3px 10px rgba(38, 65, 32, 0.04);
+
+  --shadow-md:
+    0 8px 24px rgba(38, 65, 32, 0.065);
+
+  --shadow-lg:
+    0 18px 48px rgba(38, 65, 32, 0.12);
 }
 
-/* ---------- 2. Reset and base ---------- */
+/* ==================== 3. RESET ==================== */
 
 * {
   box-sizing: border-box;
@@ -97,20 +119,24 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
+
   background:
     radial-gradient(
       ellipse at 50% -18%,
-      rgba(var(--accent-rgb, 182, 255, 0), 0.045),
-      transparent 52%
+      rgba(47, 100, 53, 0.13),
+      transparent 58%
     ),
     var(--bg);
+
   color: var(--text);
   font-family: var(--font);
   font-size: 14px;
   line-height: 1.55;
   letter-spacing: -0.01em;
+
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+
   transition:
     background-color var(--transition-slow),
     color var(--transition);
@@ -133,14 +159,13 @@ textarea {
 
 button {
   color: inherit;
+  cursor: pointer;
 }
 
-button,
-a,
-input,
-select,
-textarea {
-  -webkit-tap-highlight-color: transparent;
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none !important;
 }
 
 button:focus-visible,
@@ -167,7 +192,7 @@ svg {
 }
 
 ::selection {
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.24);
+  background: rgba(var(--accent-rgb), 0.23);
   color: var(--text);
 }
 
@@ -181,16 +206,16 @@ svg {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--surface-3);
+  background: #2a3a2b;
   border: 2px solid var(--bg);
   border-radius: 20px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: #405841;
 }
 
-/* ---------- 3. Main layout ---------- */
+/* ==================== 4. LAYOUT ==================== */
 
 .app,
 .app-shell {
@@ -216,13 +241,13 @@ main,
 
 .view.active {
   display: block;
-  animation: dailyViewEnter 260ms ease both;
+  animation: dailyViewEnter 240ms ease both;
 }
 
 @keyframes dailyViewEnter {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(4px);
   }
 
   to {
@@ -240,7 +265,7 @@ article {
   min-width: 0;
 }
 
-/* ---------- 4. Typography ---------- */
+/* ==================== 5. TYPOGRAPHY ==================== */
 
 h1,
 h2,
@@ -254,29 +279,32 @@ h1,
 h2,
 h3,
 h4 {
-  margin-top: 0;
   color: var(--text);
   font-weight: 650;
-  letter-spacing: -0.045em;
-  line-height: 1.2;
+  letter-spacing: -0.04em;
+  line-height: 1.23;
 }
 
 h1 {
+  margin-top: 0;
   margin-bottom: 10px;
-  font-size: clamp(27px, 4vw, 38px);
+  font-size: clamp(27px, 4vw, 37px);
 }
 
 h2 {
+  margin-top: 0;
   margin-bottom: 12px;
   font-size: clamp(20px, 3vw, 25px);
 }
 
 h3 {
+  margin-top: 0;
   margin-bottom: 8px;
   font-size: 16px;
 }
 
 h4 {
+  margin-top: 0;
   margin-bottom: 7px;
   font-size: 14px;
 }
@@ -323,7 +351,7 @@ b {
   text-transform: uppercase;
 }
 
-/* ---------- 5. Header ---------- */
+/* ==================== 6. HEADER ==================== */
 
 .topbar {
   position: relative;
@@ -347,7 +375,7 @@ b {
 .topbar .brand {
   font-size: 20px;
   font-weight: 750;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.05em;
 }
 
 .topbar p {
@@ -371,15 +399,20 @@ b {
   gap: 7px;
   min-height: 34px;
   padding: 7px 12px;
-  border: 1px solid rgba(var(--accent-rgb, 182, 255, 0), 0.19);
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 999px;
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.075);
+  background: rgba(var(--accent-rgb), 0.09);
   color: var(--accent);
   font-size: 12px;
   font-weight: 700;
 }
 
-/* ---------- 6. Cards and panels ---------- */
+/* ==================== 7. CARDS ==================== */
+
+/*
+   Cards have more contrast than the previous version.
+   Green-tinted borders separate them from the page.
+*/
 
 .card,
 .panel,
@@ -396,6 +429,7 @@ b {
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+
   transition:
     border-color var(--transition),
     background-color var(--transition),
@@ -411,6 +445,7 @@ b {
 
 .card:hover,
 .panel:hover,
+.settings-card:hover,
 .stat-card:hover,
 .achievement-card:hover,
 .shop-card:hover {
@@ -459,12 +494,13 @@ b {
   padding: 26px 16px;
   border: 1px dashed var(--border-hover);
   border-radius: var(--radius-md);
+  background: rgba(34, 55, 35, 0.12);
   color: var(--muted);
   font-size: 13px;
   text-align: center;
 }
 
-/* ---------- 7. Hero and dashboard ---------- */
+/* ==================== 8. DASHBOARD ==================== */
 
 .hero,
 .hero-card,
@@ -472,15 +508,18 @@ b {
   position: relative;
   overflow: hidden;
   padding: clamp(22px, 4vw, 34px);
-  border: 1px solid var(--border);
+
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-xl);
+
   background:
     linear-gradient(
       135deg,
-      rgba(var(--accent-rgb, 182, 255, 0), 0.075),
-      transparent 58%
+      rgba(41, 83, 43, 0.23),
+      rgba(15, 28, 17, 0.12) 70%
     ),
     var(--surface);
+
   box-shadow: var(--shadow-md);
 }
 
@@ -493,11 +532,13 @@ b {
   width: 180px;
   height: 180px;
   border-radius: 50%;
+
   background: radial-gradient(
     circle,
-    rgba(var(--accent-rgb, 182, 255, 0), 0.075),
+    rgba(var(--accent-rgb), 0.065),
     transparent 70%
   );
+
   content: "";
   pointer-events: none;
 }
@@ -533,17 +574,7 @@ b {
   margin-top: 20px;
 }
 
-/* ---------- 8. Buttons ---------- */
-
-button {
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
-  transform: none !important;
-}
+/* ==================== 9. BUTTONS ==================== */
 
 .btn,
 .button,
@@ -555,16 +586,20 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 8px;
+
   min-height: 39px;
   padding: 9px 15px;
-  border: 1px solid var(--border);
+
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--text);
+
   font-size: 12px;
   font-weight: 650;
   text-align: center;
   text-decoration: none;
+
   transition:
     color var(--transition-fast),
     background-color var(--transition-fast),
@@ -596,7 +631,7 @@ button[type="submit"],
 .achievement-claim {
   border-color: transparent;
   background: var(--accent);
-  color: #15190f;
+  color: #15200f;
   font-weight: 750;
 }
 
@@ -606,8 +641,8 @@ button.primary:hover,
 button[type="submit"]:hover,
 .shop-buy:hover,
 .achievement-claim:hover {
-  background: var(--accent-bright, var(--accent));
-  box-shadow: 0 4px 18px rgba(var(--accent-rgb, 182, 255, 0), 0.13);
+  background: var(--accent-bright);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.12);
 }
 
 .btn-ghost,
@@ -618,8 +653,8 @@ button[type="submit"]:hover,
 
 .btn-danger,
 .danger-button {
-  border-color: rgba(255, 104, 104, 0.2);
-  background: rgba(255, 104, 104, 0.075);
+  border-color: rgba(240, 120, 114, 0.23);
+  background: rgba(240, 120, 114, 0.08);
   color: var(--danger);
 }
 
@@ -629,36 +664,41 @@ button[type="submit"]:hover,
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   width: 35px;
   min-width: 35px;
   height: 35px;
   padding: 0;
+
   border: 1px solid var(--border);
   border-radius: 10px;
   background: transparent;
   color: var(--muted);
+
   transition: all var(--transition-fast);
 }
 
 .icon-button:hover,
 .delete-task:hover,
 .close-button:hover {
-  border-color: rgba(255, 104, 104, 0.25);
-  background: rgba(255, 104, 104, 0.08);
+  border-color: rgba(240, 120, 114, 0.27);
+  background: rgba(240, 120, 114, 0.08);
   color: var(--danger);
 }
 
-button:focus-visible,
-a:focus-visible {
-  outline-color: var(--accent);
-}
-
-/* ---------- 9. Stats and counters ---------- */
+/* ==================== 10. STATS ==================== */
 
 .stat-card {
   position: relative;
   overflow: hidden;
   padding: 17px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(38, 65, 39, 0.10),
+      transparent 65%
+    ),
+    var(--surface);
 }
 
 .stat-card .stat-label,
@@ -676,7 +716,7 @@ a:focus-visible {
   color: var(--text);
   font-size: clamp(23px, 3vw, 31px);
   font-weight: 750;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.055em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -696,22 +736,63 @@ a:focus-visible {
   width: 35px;
   height: 35px;
   margin-bottom: 13px;
+
+  border: 1px solid rgba(var(--accent-rgb), 0.11);
   border-radius: 11px;
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.085);
+  background: rgba(var(--accent-rgb), 0.075);
   color: var(--accent);
 }
 
-#home-coins,
-#shop-coins,
+/* ==================== 11. XP AND COINS ==================== */
+
+/* XP follows the currently selected Accent-Farbe. */
 #home-xp,
-#progress-coins,
-#progress-earned-coins,
-#analytics-coins {
+#progress-level,
+.xp-value {
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
-  transition: color var(--transition);
 }
 
-/* ---------- 10. Progress bars ---------- */
+/*
+   Coin balances always remain yellow.
+   This does not depend on the chosen accent color.
+*/
+
+#home-coins,
+#shop-coins,
+#progress-coins,
+#progress-earned-coins,
+#analytics-coins,
+.coin,
+.coins,
+.coin-value,
+.coin-amount,
+.wallet-balance {
+  color: var(--coin-color);
+  font-variant-numeric: tabular-nums;
+}
+
+/* An extra safeguard for coin values inside the shop. */
+.shop-reward-action strong {
+  color: var(--coin-color);
+}
+
+#shop-history .history-row > span {
+  color: var(--coin-color);
+  font-weight: 700;
+}
+
+.wallet-card .wallet-balance,
+.coin-wallet .wallet-balance {
+  color: var(--coin-color);
+}
+
+.coin-icon,
+.coins-icon {
+  color: var(--coin-color);
+}
+
+/* ==================== 12. PROGRESS BARS ==================== */
 
 .progress,
 .progress-track,
@@ -720,10 +801,13 @@ a:focus-visible {
 .daily-progress {
   position: relative;
   overflow: hidden;
+
   width: 100%;
   height: 7px;
+
+  border: 1px solid rgba(140, 183, 129, 0.07);
   border-radius: 999px;
-  background: var(--surface-3);
+  background: #223126;
 }
 
 .progress-fill,
@@ -735,10 +819,14 @@ a:focus-visible {
   display: block;
   width: 0;
   height: 100%;
+
   border-radius: inherit;
   background: var(--accent);
-  box-shadow: 0 0 10px rgba(var(--accent-rgb, 182, 255, 0), 0.12);
-  transition: width 500ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  box-shadow: 0 0 9px rgba(var(--accent-rgb), 0.10);
+
+  transition:
+    width 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .progress-labels,
@@ -748,7 +836,9 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
   margin-bottom: 9px;
+
   color: var(--muted);
   font-size: 11px;
 }
@@ -758,13 +848,21 @@ a:focus-visible {
   color: var(--text);
 }
 
-/* ---------- 11. Level card ---------- */
+/* ==================== 13. LEVEL CARD ==================== */
 
 .level-card {
   display: flex;
   align-items: center;
   gap: 17px;
   padding: 20px;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(36, 63, 37, 0.15),
+      transparent 75%
+    ),
+    var(--surface);
 }
 
 .level-orb,
@@ -773,15 +871,19 @@ a:focus-visible {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+
   width: 62px;
   height: 62px;
-  border: 1px solid rgba(var(--accent-rgb, 182, 255, 0), 0.24);
+
+  border: 1px solid rgba(var(--accent-rgb), 0.27);
   border-radius: 50%;
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.08);
+  background: rgba(var(--accent-rgb), 0.085);
   color: var(--accent);
+
   font-size: 22px;
   font-weight: 800;
-  box-shadow: 0 0 25px rgba(var(--accent-rgb, 182, 255, 0), 0.045);
+
+  box-shadow: 0 0 22px rgba(var(--accent-rgb), 0.045);
 }
 
 .level-copy {
@@ -799,7 +901,7 @@ a:focus-visible {
   margin-bottom: 10px;
 }
 
-/* ---------- 12. Tasks ---------- */
+/* ==================== 14. TASKS ==================== */
 
 .task-list,
 #task-list,
@@ -816,19 +918,23 @@ a:focus-visible {
   align-items: center;
   gap: 13px;
   padding: 15px;
+
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .task-card:hover,
 .task-item:hover,
 .task-row:hover {
   border-color: var(--border-hover);
+  background: #132017;
 }
 
 .task-card.completed,
 .task-item.completed,
 .task-row.completed,
 .task-card.is-complete {
-  opacity: 0.66;
+  opacity: 0.65;
 }
 
 .task-card.completed .task-title,
@@ -892,10 +998,12 @@ a:focus-visible {
   gap: 5px;
   max-width: 100%;
   padding: 4px 8px;
+
   border: 1px solid var(--border);
   border-radius: 7px;
   background: var(--surface-2);
   color: var(--muted-2);
+
   font-size: 10px;
   font-weight: 600;
 }
@@ -949,12 +1057,15 @@ a:focus-visible {
 .filter-button {
   min-height: 32px;
   padding: 6px 11px;
+
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: transparent;
+  background: var(--surface);
   color: var(--muted);
+
   font-size: 11px;
   font-weight: 600;
+
   transition: all var(--transition-fast);
 }
 
@@ -964,12 +1075,12 @@ a:focus-visible {
 .filter-row button.active,
 .task-filters button.active,
 .filter-button.active {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.24);
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.075);
+  border-color: rgba(var(--accent-rgb), 0.28);
+  background: rgba(var(--accent-rgb), 0.085);
   color: var(--accent);
 }
 
-/* ---------- 13. Inputs and forms ---------- */
+/* ==================== 15. INPUTS ==================== */
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select,
@@ -977,10 +1088,12 @@ textarea {
   width: 100%;
   min-height: 41px;
   padding: 10px 12px;
+
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  background: #101b12;
   color: var(--text);
+
   transition:
     border-color var(--transition-fast),
     background-color var(--transition-fast),
@@ -994,8 +1107,8 @@ textarea {
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--muted);
-  opacity: 0.8;
+  color: #7e907d;
+  opacity: 1;
 }
 
 input:hover,
@@ -1007,9 +1120,9 @@ textarea:hover {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.65);
+  border-color: rgba(var(--accent-rgb), 0.58);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 182, 255, 0), 0.075);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.075);
 }
 
 input[type="checkbox"],
@@ -1039,11 +1152,7 @@ label {
   gap: 12px;
 }
 
-form button[type="submit"] {
-  flex-shrink: 0;
-}
-
-/* ---------- 14. Categories ---------- */
+/* ==================== 16. CATEGORIES ==================== */
 
 .category-list,
 #category-list,
@@ -1061,6 +1170,7 @@ form button[type="submit"] {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
+
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -1084,7 +1194,7 @@ form button[type="submit"] {
   gap: 7px;
 }
 
-/* ---------- 15. Calendar ---------- */
+/* ==================== 17. CALENDAR ==================== */
 
 .calendar-card {
   overflow: hidden;
@@ -1131,14 +1241,18 @@ form button[type="submit"] {
   display: flex;
   align-items: center;
   justify-content: center;
+
   min-width: 0;
   min-height: 43px;
   padding: 5px;
+
   border: 1px solid transparent;
   border-radius: 10px;
   background: var(--surface-2);
   color: var(--text);
+
   font-size: 12px;
+
   transition: all var(--transition-fast);
 }
 
@@ -1150,7 +1264,7 @@ form button[type="submit"] {
 
 .calendar-day.today,
 .calendar-date.today {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.45);
+  border-color: rgba(var(--accent-rgb), 0.45);
   color: var(--accent);
   font-weight: 750;
 }
@@ -1160,7 +1274,7 @@ form button[type="submit"] {
 .calendar-day.active,
 .calendar-date.active {
   border-color: var(--accent);
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
 }
 
@@ -1174,17 +1288,20 @@ form button[type="submit"] {
   position: absolute;
   bottom: 4px;
   left: 50%;
+
   width: 4px;
   height: 4px;
+
   border-radius: 50%;
   background: var(--accent);
   content: "";
+
   transform: translateX(-50%);
 }
 
 .calendar-day.completed,
 .calendar-date.completed {
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.07);
+  background: rgba(var(--accent-rgb), 0.075);
 }
 
 .calendar-events,
@@ -1192,7 +1309,7 @@ form button[type="submit"] {
   margin-top: 18px;
 }
 
-/* ---------- 16. Heatmap ---------- */
+/* ==================== 18. HEATMAP ==================== */
 
 .heatmap,
 #heatmap,
@@ -1201,6 +1318,7 @@ form button[type="submit"] {
   grid-auto-flow: column;
   grid-template-rows: repeat(7, minmax(0, 1fr));
   gap: 4px;
+
   width: 100%;
   overflow-x: auto;
   padding: 5px 0;
@@ -1210,6 +1328,7 @@ form button[type="submit"] {
   width: 100%;
   min-width: 9px;
   aspect-ratio: 1;
+
   border: 1px solid var(--border);
   border-radius: 3px;
   background: var(--surface-2);
@@ -1217,17 +1336,17 @@ form button[type="submit"] {
 
 .heatmap-cell[data-level="1"],
 .heatmap-cell.level-1 {
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.2);
+  background: rgba(var(--accent-rgb), 0.2);
 }
 
 .heatmap-cell[data-level="2"],
 .heatmap-cell.level-2 {
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.4);
+  background: rgba(var(--accent-rgb), 0.4);
 }
 
 .heatmap-cell[data-level="3"],
 .heatmap-cell.level-3 {
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.65);
+  background: rgba(var(--accent-rgb), 0.65);
 }
 
 .heatmap-cell[data-level="4"],
@@ -1236,7 +1355,7 @@ form button[type="submit"] {
   background: var(--accent);
 }
 
-/* ---------- 17. Achievements ---------- */
+/* ==================== 19. ACHIEVEMENTS ==================== */
 
 .achievement-list,
 #achievement-list {
@@ -1257,7 +1376,14 @@ form button[type="submit"] {
 }
 
 .achievement-card.unlocked {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.16);
+  border-color: rgba(var(--accent-rgb), 0.21);
+  background:
+    linear-gradient(
+      110deg,
+      rgba(37, 69, 38, 0.11),
+      transparent 80%
+    ),
+    var(--surface);
 }
 
 .achievement-icon {
@@ -1265,10 +1391,14 @@ form button[type="submit"] {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+
   width: 43px;
   height: 43px;
+
+  border: 1px solid var(--border);
   border-radius: 13px;
   background: var(--surface-3);
+
   font-size: 20px;
 }
 
@@ -1300,7 +1430,7 @@ form button[type="submit"] {
   font-size: 10px;
 }
 
-/* ---------- 18. Analytics ---------- */
+/* ==================== 20. ANALYTICS ==================== */
 
 .analytics-grid,
 .analytics-cards {
@@ -1322,6 +1452,7 @@ form button[type="submit"] {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
+
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
@@ -1338,7 +1469,7 @@ form button[type="submit"] {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 19. Focus timer ---------- */
+/* ==================== 21. FOCUS TIMER ==================== */
 
 .timer-card,
 .focus-card {
@@ -1350,10 +1481,12 @@ form button[type="submit"] {
 #timer-display {
   margin: 18px 0;
   color: var(--text);
+
   font-size: clamp(44px, 9vw, 76px);
   font-weight: 750;
   letter-spacing: -0.075em;
   line-height: 1;
+
   font-variant-numeric: tabular-nums;
 }
 
@@ -1377,21 +1510,23 @@ form button[type="submit"] {
 .timer-modes button,
 .timer-mode-options button {
   padding: 7px 12px;
+
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: transparent;
+  background: var(--surface-2);
   color: var(--muted);
+
   font-size: 11px;
 }
 
 .timer-modes button.active,
 .timer-mode-options button.active {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.3);
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.09);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  background: rgba(var(--accent-rgb), 0.09);
   color: var(--accent);
 }
 
-/* ---------- 20. Shop and wallet ---------- */
+/* ==================== 22. SHOP AND WALLET ==================== */
 
 .wallet-card,
 .coin-wallet {
@@ -1400,13 +1535,15 @@ form button[type="submit"] {
   justify-content: space-between;
   gap: 15px;
   padding: 20px;
-  border: 1px solid rgba(var(--accent-rgb, 182, 255, 0), 0.17);
+
+  border: 1px solid rgba(244, 202, 88, 0.19);
   border-radius: var(--radius-lg);
+
   background:
     linear-gradient(
       125deg,
-      rgba(var(--accent-rgb, 182, 255, 0), 0.07),
-      transparent 70%
+      rgba(74, 64, 31, 0.17),
+      transparent 72%
     ),
     var(--surface);
 }
@@ -1421,7 +1558,8 @@ form button[type="submit"] {
 .coin-wallet .wallet-balance {
   display: block;
   margin-top: 4px;
-  color: var(--accent);
+
+  color: var(--coin-color);
   font-size: clamp(27px, 4vw, 36px);
   font-weight: 800;
   letter-spacing: -0.06em;
@@ -1441,6 +1579,14 @@ form button[type="submit"] {
   align-items: flex-start;
   gap: 13px;
   padding: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(36, 59, 37, 0.10),
+      transparent 72%
+    ),
+    var(--surface);
 }
 
 .shop-reward-icon {
@@ -1448,10 +1594,14 @@ form button[type="submit"] {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+
   width: 44px;
   height: 44px;
+
+  border: 1px solid var(--border);
   border-radius: 13px;
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.075);
+  background: var(--surface-3);
+
   font-size: 21px;
 }
 
@@ -1485,7 +1635,7 @@ form button[type="submit"] {
 }
 
 .shop-reward-action strong {
-  color: var(--accent);
+  color: var(--coin-color);
   font-size: 12px;
   white-space: nowrap;
 }
@@ -1509,6 +1659,7 @@ form button[type="submit"] {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
+
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -1531,17 +1682,18 @@ form button[type="submit"] {
 
 .history-row > span {
   flex-shrink: 0;
-  color: var(--danger);
+  color: var(--coin-color);
   font-size: 12px;
   font-weight: 700;
 }
 
-/* ---------- 21. Settings ---------- */
+/* ==================== 23. SETTINGS ==================== */
 
 .settings-group,
 .settings-section {
   margin-bottom: 18px;
   padding: 19px;
+
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -1617,14 +1769,18 @@ form button[type="submit"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   width: 35px;
   min-width: 35px;
   height: 35px;
   padding: 0;
+
   border: 2px solid transparent;
   border-radius: 50%;
   background: var(--swatch, var(--accent));
+
   cursor: pointer;
+
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
@@ -1634,7 +1790,7 @@ form button[type="submit"] {
 .accent-swatch:hover,
 .accent-option:hover,
 #accent-options button:hover {
-  transform: scale(1.07);
+  transform: scale(1.06);
 }
 
 .accent-swatch.active,
@@ -1655,7 +1811,7 @@ input[type="checkbox"].toggle,
   height: 18px;
 }
 
-/* ---------- 22. Bottom navigation ---------- */
+/* ==================== 24. NAVIGATION ==================== */
 
 .bottom-nav {
   position: fixed;
@@ -1663,23 +1819,28 @@ input[type="checkbox"].toggle,
   right: 0;
   bottom: 0;
   left: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+
   min-height: var(--nav-height);
   padding: 9px 12px max(9px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border);
-  background: rgba(8, 10, 8, 0.88);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+
+  border-top: 1px solid rgba(137, 183, 126, 0.18);
+
+  background: rgba(9, 17, 10, 0.94);
+
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
 }
 
 html[data-theme="light"] .bottom-nav,
 html.light .bottom-nav,
 body.light .bottom-nav,
 body[data-theme="light"] .bottom-nav {
-  background: rgba(244, 246, 242, 0.9);
+  background: rgba(237, 243, 233, 0.94);
 }
 
 .bottom-nav-inner {
@@ -1698,18 +1859,22 @@ body[data-theme="light"] .bottom-nav {
   justify-content: center;
   flex-direction: column;
   gap: 4px;
+
   min-width: 0;
   max-width: 100px;
   min-height: 48px;
   padding: 7px 5px;
+
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
   color: var(--muted);
+
   font-size: 10px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
+
   transition:
     color var(--transition-fast),
     background-color var(--transition-fast),
@@ -1724,14 +1889,14 @@ body[data-theme="light"] .bottom-nav {
 }
 
 .nav-item:hover {
-  background: var(--surface-2);
+  background: rgba(38, 61, 39, 0.24);
   color: var(--text);
 }
 
 .nav-item.active,
 .nav-item[aria-current="page"] {
-  border-color: rgba(var(--accent-rgb, 182, 255, 0), 0.1);
-  background: rgba(var(--accent-rgb, 182, 255, 0), 0.075);
+  border-color: rgba(var(--accent-rgb), 0.16);
+  background: rgba(var(--accent-rgb), 0.075);
   color: var(--accent);
 }
 
@@ -1739,38 +1904,48 @@ body[data-theme="light"] .bottom-nav {
   position: absolute;
   top: -1px;
   left: 50%;
+
   width: 18px;
   height: 2px;
+
   border-radius: 99px;
   background: var(--accent);
   content: "";
+
   transform: translateX(-50%);
 }
 
-/* ---------- 23. Toast notifications ---------- */
+/* ==================== 25. TOAST ==================== */
 
 .toast,
 #toast {
   position: fixed;
   z-index: 10001;
+
   right: 20px;
   bottom: calc(var(--nav-height) + 16px);
   left: 20px;
+
   width: fit-content;
   max-width: min(440px, calc(100% - 40px));
   margin-inline: auto;
   padding: 12px 17px;
+
   border: 1px solid var(--border-hover);
   border-radius: 13px;
-  background: var(--surface-3);
+  background: #1b2a1e;
   color: var(--text);
+
   box-shadow: var(--shadow-lg);
+
   font-size: 12px;
   font-weight: 550;
   line-height: 1.5;
+
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px);
+
   transition:
     opacity 180ms ease,
     transform 180ms ease;
@@ -1784,7 +1959,7 @@ body[data-theme="light"] .bottom-nav {
   transform: translateY(0);
 }
 
-/* ---------- 24. Tables and lists ---------- */
+/* ==================== 26. TABLES AND LISTS ==================== */
 
 table {
   width: 100%;
@@ -1820,12 +1995,12 @@ li + li {
   margin-top: 5px;
 }
 
-/* ---------- 25. Modal compatibility ---------- */
+/* ==================== 27. MODALS ==================== */
 
 .modal,
 .dialog,
 .confirmation-modal {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-hover);
   border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
@@ -1837,11 +2012,14 @@ li + li {
   position: fixed;
   z-index: 10000;
   inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.58);
+
+  background: rgba(3, 8, 4, 0.72);
+
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
@@ -1852,9 +2030,11 @@ li + li {
   max-height: min(85vh, 720px);
   overflow-y: auto;
   padding: 24px;
-  border: 1px solid var(--border);
+
+  border: 1px solid var(--border-hover);
   border-radius: var(--radius-xl);
   background: var(--surface);
+
   box-shadow: var(--shadow-lg);
 }
 
@@ -1867,10 +2047,14 @@ li + li {
   margin-top: 20px;
 }
 
-/* ---------- 26. Utility classes ---------- */
+/* ==================== 28. UTILITIES ==================== */
 
 .text-accent {
   color: var(--accent) !important;
+}
+
+.text-coin {
+  color: var(--coin-color) !important;
 }
 
 .text-muted {
@@ -1937,7 +2121,7 @@ li + li {
   display: none !important;
 }
 
-/* ---------- 27. Responsive: tablets ---------- */
+/* ==================== 29. RESPONSIVE TABLETS ==================== */
 
 @media (max-width: 900px) {
   .app,
@@ -1962,7 +2146,7 @@ li + li {
   }
 }
 
-/* ---------- 28. Responsive: phones ---------- */
+/* ==================== 30. RESPONSIVE PHONES ==================== */
 
 @media (max-width: 600px) {
   :root {
@@ -2145,7 +2329,7 @@ li + li {
   }
 }
 
-/* ---------- 29. Very small screens ---------- */
+/* ==================== 31. VERY SMALL SCREENS ==================== */
 
 @media (max-width: 380px) {
   .app,
@@ -2188,7 +2372,7 @@ li + li {
   }
 }
 
-/* ---------- 30. Reduced motion accessibility ---------- */
+/* ==================== 32. REDUCED MOTION ==================== */
 
 @media (prefers-reduced-motion: reduce) {
   *,
