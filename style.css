@@ -2960,3 +2960,286 @@ textarea:focus {
     min-width: 0;
   }
 }
+
+/* ==========================================================
+   DailyApp 3.0 — Readability & Spacing Fix
+   XP • Streaks • System Controls • Checkboxes • Calendar
+   ========================================================== */
+
+/* 1. XP, Streaks und Statistiken besser lesbar */
+
+#view-progress .stat-value,
+#view-progress .stat-number,
+#view-progress .progress-value,
+#view-progress .metric-value,
+#view-analytics .stat-value,
+#view-analytics .stat-number,
+.stat-card .stat-value,
+.stat-card .stat-number {
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+#progress-xp,
+#progress-total-xp,
+#progress-earned-xp,
+#progress-streak,
+#progress-best-streak,
+#progress-level,
+#progress-coins,
+#progress-earned-coins,
+#analytics-today,
+#analytics-week,
+#analytics-week-xp,
+#analytics-total,
+#analytics-coins,
+#analytics-focus {
+  font-size: 25px;
+  font-weight: 750;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zahlen sollen lesbar bleiben, auch wenn sie länger werden */
+#view-progress .stat-card,
+#view-analytics .stat-card {
+  min-width: 0;
+  padding: 17px;
+}
+
+#view-progress .stat-label,
+#view-analytics .stat-label,
+#view-progress .stat-description,
+#view-analytics .stat-description,
+#view-progress .stat-card small,
+#view-analytics .stat-card small {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Die Beschriftungen leicht grün-grau statt reinweiß */
+#view-progress .stat-label,
+#view-analytics .stat-label {
+  color: var(--muted, #9bab96);
+  font-weight: 550;
+}
+
+/* 2. System Controls und Einstellungen lesbarer machen */
+
+#view-settings label,
+#view-settings .setting-copy strong,
+#view-settings .settings-copy strong,
+#view-settings .setting-row strong,
+#view-settings .settings-row strong {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#view-settings .setting-copy small,
+#view-settings .settings-copy small,
+#view-settings .setting-row small,
+#view-settings .settings-row small,
+#view-settings .settings-group > p,
+#view-settings .settings-section > p {
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+#view-settings .settings-group h2,
+#view-settings .settings-section h2 {
+  font-size: 20px;
+}
+
+#view-settings .settings-group h3,
+#view-settings .settings-section h3 {
+  font-size: 16px;
+}
+
+/* Controls nicht zu eng zusammendrücken */
+#view-settings .setting-row,
+#view-settings .settings-row {
+  gap: 14px;
+  padding-block: 15px;
+}
+
+#view-settings input,
+#view-settings select,
+#view-settings textarea {
+  font-size: 13px;
+}
+
+/* 3. Aufgaben-Checkboxen größer und einfacher anklickbar */
+
+#task-list input[type="checkbox"],
+.task-list input[type="checkbox"],
+.tasks-list input[type="checkbox"],
+.task-card input[type="checkbox"],
+.task-item input[type="checkbox"],
+.task-row input[type="checkbox"] {
+  width: 21px;
+  height: 21px;
+  min-width: 21px;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--accent, #b6ff00);
+  cursor: pointer;
+}
+
+/* Falls das Häkchen als eigenes Element umgesetzt ist */
+.task-check,
+.task-checkbox {
+  min-width: 22px;
+  min-height: 22px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Checkbox und Aufgabentext vertikal sauber ausrichten */
+.task-card,
+.task-item,
+.task-row {
+  align-items: center;
+  gap: 12px;
+}
+
+.task-title {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.task-description {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* 4. Kalender: Wochentage sauber in sieben Spalten aufteilen */
+
+#view-calendar .calendar-weekdays,
+#view-calendar .calendar-weekdays-row,
+#view-calendar .calendar-weekday-row,
+#view-calendar .calendar-week-header,
+#view-calendar .calendar-day-names,
+#view-calendar #calendar-weekdays,
+#view-calendar #calendar-weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  column-gap: 6px;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 7px;
+}
+
+#view-calendar .calendar-weekday,
+#view-calendar .calendar-day-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 8px 2px;
+  border-radius: 8px;
+  color: var(--muted, #9bab96);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Abstand zwischen allen Tagen im Monatsraster */
+#view-calendar .calendar-grid,
+#view-calendar .calendar-days,
+#view-calendar #calendar-grid,
+#view-calendar .month-grid,
+#view-calendar .week-grid,
+#view-calendar .calendar-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Die einzelnen Kalenderfelder klar voneinander abgrenzen */
+#view-calendar .calendar-day,
+#view-calendar .calendar-date {
+  min-width: 0;
+  border-radius: 9px;
+}
+
+/* Wochenansicht: mehr Platz zwischen Tagen und Ereignissen */
+#view-calendar .week-day,
+#view-calendar .week-column,
+#view-calendar .calendar-week-day {
+  min-width: 0;
+  padding-inline: 3px;
+}
+
+/* 5. Mobile Anpassungen */
+
+@media (max-width: 600px) {
+  #progress-xp,
+  #progress-total-xp,
+  #progress-earned-xp,
+  #progress-streak,
+  #progress-best-streak,
+  #progress-level,
+  #progress-coins,
+  #progress-earned-coins,
+  #analytics-today,
+  #analytics-week,
+  #analytics-week-xp,
+  #analytics-total,
+  #analytics-coins,
+  #analytics-focus {
+    font-size: 23px;
+  }
+
+  #view-progress .stat-card,
+  #view-analytics .stat-card {
+    padding: 13px;
+  }
+
+  #view-settings .setting-row,
+  #view-settings .settings-row {
+    gap: 10px;
+    padding-block: 13px;
+  }
+
+  #task-list input[type="checkbox"],
+  .task-list input[type="checkbox"],
+  .tasks-list input[type="checkbox"],
+  .task-card input[type="checkbox"],
+  .task-item input[type="checkbox"],
+  .task-row input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+  }
+
+  #view-calendar .calendar-weekdays,
+  #view-calendar .calendar-weekdays-row,
+  #view-calendar .calendar-weekday-row,
+  #view-calendar .calendar-week-header,
+  #view-calendar .calendar-day-names,
+  #view-calendar #calendar-weekdays,
+  #view-calendar #calendar-weekday-row {
+    column-gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  #view-calendar .calendar-grid,
+  #view-calendar .calendar-days,
+  #view-calendar #calendar-grid,
+  #view-calendar .month-grid,
+  #view-calendar .week-grid,
+  #view-calendar .calendar-week-grid {
+    gap: 4px;
+  }
+
+  #view-calendar .calendar-weekday,
+  #view-calendar .calendar-day-label {
+    padding: 7px 1px;
+    font-size: 10px;
+  }
+}
