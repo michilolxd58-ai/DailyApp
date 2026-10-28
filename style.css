@@ -38,6 +38,12 @@
 :root[data-accent="lime"] { --accent:#b7e66d; --accent-rgb:183,230,109; }
 :root[data-accent="white"] { --accent:#d9e4f5; --accent-rgb:217,228,245; }
 
+/* White accent is invisible against the light background — darken it there. */
+:root[data-theme="light"][data-accent="white"] {
+  --accent: #55627a;
+  --accent-rgb: 85, 98, 122;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -59,7 +65,7 @@ body {
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background .2s, color .2s;
+  transition: color .2s;
 }
 
 button,
@@ -84,6 +90,11 @@ input:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+/* Accent-coloured buttons have no visible focus ring — force a contrasting one. */
+.primary-button:focus-visible {
+  outline-color: var(--text);
 }
 
 .app-shell {
@@ -578,6 +589,7 @@ button:active {
 }
 
 .task-check {
+  position: relative;
   display: grid;
   flex: 0 0 24px;
   place-items: center;
@@ -589,6 +601,13 @@ button:active {
   background: transparent;
   color: #10170a;
   font-weight: 900;
+}
+
+/* Expand hit target to ~44px without changing visual size. */
+.task-check::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
 }
 
 .task-card.done .task-check {
@@ -622,7 +641,8 @@ button:active {
 }
 
 .delete-task {
-  padding: 4px 6px;
+  padding: 10px;
+  margin: -6px -4px -6px 0;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -872,13 +892,17 @@ button:active {
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
-  opacity: .5;
+}
+
+/* Dim only icon+title of locked achievements so the description stays readable. */
+.achievement:not(.unlocked) .achievement-icon,
+.achievement:not(.unlocked) h3 {
+  opacity: .45;
 }
 
 .achievement.unlocked {
   border-color: rgba(var(--accent-rgb),.45);
   background: rgba(var(--accent-rgb),.035);
-  opacity: 1;
 }
 
 .achievement-icon {
@@ -958,6 +982,14 @@ button:active {
   align-items: center;
   gap: 10px;
   margin-top: 15px;
+}
+
+/* The div also carries .settings-group, whose `display: grid` would win on
+   source order. Bump specificity so the intended flex row applies. */
+.settings-group.timer-settings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .timer-settings label {
@@ -1168,7 +1200,7 @@ button:active {
   opacity: 0;
   pointer-events: none;
   box-shadow: var(--shadow);
-  transition: .2s;
+  transition: opacity .2s, transform .2s;
 }
 
 .toast.show {
@@ -1265,6 +1297,15 @@ button:active {
     scroll-behavior: auto !important;
   }
   button:active { transform: none; }
+}
+
+/* Reduced transparency — swap the nav blur for an opaque bar */
+@media (prefers-reduced-transparency: reduce) {
+  .bottom-nav {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--bg);
+  }
 }
 
 /* Hover affordances — desktop only, doesn't affect touch */
