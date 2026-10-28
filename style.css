@@ -1451,3 +1451,206 @@ p { text-wrap: pretty; }
     scrollbar-color: var(--surface-2) transparent;
   }
 }
+/* ============================================================
+   LONG-TERM POLISH
+   Durability over novelty. No motion that fatigues; nothing
+   that needs maintenance across browser updates.
+   ============================================================ */
+
+/* --- 1. Native form harmony ---------------------------------
+   Browser-drawn UI (caret, selection, spinners) follows the
+   accent. Zero JS; works on every current browser. */
+
+input,
+select,
+textarea {
+  accent-color: var(--accent);
+  caret-color: var(--accent);
+}
+
+/* Chromium paints autofill with a yellow box — override it. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Number inputs: tuck the spinner into the field instead of
+   overlapping the border. Same width, cleaner hit area. */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  height: 1.6em;
+  opacity: 1;
+}
+
+/* --- 2. Focus and selection --------------------------------- 
+   Focus ring is a hard requirement; the halo is polish. */
+
+::selection {
+  background: rgba(var(--accent-rgb), .28);
+  color: var(--text);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  box-shadow: 0 0 0 5px rgba(var(--accent-rgb), .12);
+}
+
+.primary-button:focus-visible {
+  box-shadow: 0 0 0 5px rgba(var(--accent-rgb), .2);
+}
+
+.task-form:focus-within,
+.settings-group:focus-within {
+  border-color: rgba(var(--accent-rgb), .28);
+}
+
+/* --- 3. Readability over years ------------------------------
+   Body copy at 1.5 line-height reads more comfortably across a
+   whole day than the browser default of ~1.2. Compact labels
+   keep their tight line-height so nothing looks loose. */
+
+body {
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+}
+
+.stat-card strong,
+.level-row h2 {
+  line-height: 1.1;
+}
+
+/* Small text is the first casualty of long use. These are the
+   smallest labels in the app — a .04–.06rem bump is invisible
+   in screenshots but noticeable over a 30-day streak. */
+
+.eyebrow {
+  font-size: .72rem;
+  letter-spacing: .14em;
+}
+
+.tiny {
+  font-size: .74rem;
+}
+
+.nav-item small {
+  font-size: .66rem;
+}
+
+@media (max-width: 380px) {
+  .nav-item small {
+    font-size: .58rem;
+  }
+}
+
+/* Numbers get tabular figures — column alignment without
+   touching the grid. */
+
+.stat-card strong,
+.progress-meta strong,
+.level-row h2,
+.weekly-row strong,
+.compare-top span,
+.calendar-day,
+.timer-display,
+.bar-value,
+.task-xp {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Long words break intelligibly instead of overflowing their
+   card. Uses break-word not hyphens:auto — hyphens would follow
+   your <html lang="de"> and mangle English text. Fixing the
+   lang attribute is a one-character HTML edit and I'd do it
+   separately, not from CSS. */
+
+.task-title,
+.task-sub,
+.category-row strong,
+.achievement h3,
+.achievement p,
+.insight-line,
+.empty-state,
+.quest-info strong {
+  overflow-wrap: anywhere;
+}
+
+/* --- 4. Accessibility the browser can request ---------------
+   Both are WCAG 2.2 requirements. Both matter more when the
+   same app is used for years, not months. */
+
+@media (forced-colors: active) {
+  .primary-button,
+  .secondary-button,
+  .danger-button {
+    border: 1px solid CanvasText;
+  }
+
+  .progress-fill,
+  .bar-fill,
+  .compare-bar span {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  .task-check,
+  .calendar-day,
+  .icon-button {
+    border-color: CanvasText;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --muted: #b4baa9;
+    --border: rgba(var(--accent-rgb), .32);
+  }
+
+  :root[data-theme="light"] {
+    --muted: #3a4234;
+    --border: rgba(55, 75, 30, .3);
+  }
+
+  .panel,
+  .stat-card,
+  .task-card,
+  .achievement,
+  .category-row,
+  .hero-card {
+    border-width: 2px;
+  }
+}
+
+/* --- 5. Scrollbar consistency -------------------------------
+   color-scheme already themes the scrollbar in Chromium; this
+   makes it match your surface tokens exactly on both themes.
+   Pairs with the Firefox version already in the file. */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid var(--bg);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), .4);
+}
