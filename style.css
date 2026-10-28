@@ -1,3 +1,4 @@
+```css
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
@@ -1094,12 +1095,15 @@ button:active {
   border-radius: 50%;
   outline: 1px solid var(--border);
   background: var(--swatch);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.035);
 }
 
 .accent-swatch.active,
-.accent-swatch.selected {
+.accent-swatch.selected,
+.accent-swatch[aria-pressed="true"] {
   outline: 2px solid var(--text);
   outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
 }
 
 .category-list {
@@ -1238,3 +1242,4 @@ button:active {
     flex-wrap: wrap;
   }
 }
+```
