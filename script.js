@@ -178,10 +178,17 @@ function applyAppearance() {
   const accent = ACCENTS[appearance.accent] || ACCENTS.mint;
   const theme = resolvedTheme();
 
+  // White accent is invisible against the light background — swap to a darker tone.
+  // This must be done here rather than in CSS, because the inline style set below
+  // on documentElement beats any stylesheet rule that isn't !important.
+  const effective = (theme === "light" && appearance.accent === "white")
+    ? { color: "#55627a", rgb: "85,98,122" }
+    : accent;
+
   root.dataset.theme = theme;
   root.dataset.accent = appearance.accent;
-  root.style.setProperty("--accent", accent.color);
-  root.style.setProperty("--accent-rgb", accent.rgb);
+  root.style.setProperty("--accent", effective.color);
+  root.style.setProperty("--accent-rgb", effective.rgb);
 
   const themeColor = $("#theme-color");
   if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#080a06" : "#f4f6f1");
@@ -558,6 +565,14 @@ function checkAchievements() {
 
 function renderHome() {
   const today = todayKey();
+
+  // If the tab was left open past midnight, regenerate today's daily plan so the
+  // home view and task lists reflect the current day.
+  if (today !== renderHome._lastDay) {
+    renderHome._lastDay = today;
+    ensureDailyTasks();
+  }
+
   const todayTasks = state.tasks.filter(
     (task) => task.created === today || (task.kind === "daily-plan" && task.day === today)
   );
@@ -609,6 +624,7 @@ function renderHome() {
     <div class="weekly-row"><span>Active days</span><strong>${week.days}/7</strong></div>
   `;
 }
+renderHome._lastDay = todayKey();
 
 /* TASK LISTS */
 
@@ -1205,6 +1221,7 @@ async function importData(file) {
     activeQuest = null;
     save();
     ensureDailyTasks();
+    checkAchievements();
     renderAll();
 
     toast("Backup imported successfully.");
@@ -1310,8 +1327,21 @@ function go(view) {
   });
 
   $$(".nav-item").forEach((button) => {
-    button.classList.toggle("active", button.dataset.view === view);
+    const isActive = button.dataset.view === view;
+    button.classList.toggle("active", isActive);
+    if (isActive) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
   });
+
+  // Move focus into the new view for screen readers / keyboard users.
+  const heading = target.querySelector("h2");
+  if (heading) {
+    heading.setAttribute("tabindex", "-1");
+    heading.focus({ preventScroll: true });
+  }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -1410,7 +1440,9 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  const accentButton = event.target.closest("[data-accent]");
+  // Narrowed to actual swatches — <html> also carries data-accent via dataset,
+  // and a bare [data-accent] selector would match it on any click anywhere.
+  const accentButton = event.target.closest(".accent-swatch[data-accent]");
   if (accentButton && ACCENTS[accentButton.dataset.accent]) {
     appearance.accent = accentButton.dataset.accent;
     saveAppearance();
@@ -1481,3 +1513,7 @@ ensureDailyTasks();
 checkAchievements();
 renderAll();
 updateTimerDisplay();
+
+// Mark the initial active nav item for assistive tech.
+const initialActiveNav = $(".nav-item.active");
+if (initialActiveNav) initialActiveNav.setAttribute("aria-current", "page");
