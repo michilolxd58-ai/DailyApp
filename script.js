@@ -179,8 +179,8 @@ function applyAppearance() {
   const theme = resolvedTheme();
 
   // White accent is invisible against the light background — swap to a darker tone.
-  // This must be done here rather than in CSS, because the inline style set below
-  // on documentElement beats any stylesheet rule that isn't !important.
+  // Done here rather than in CSS because the inline style set below on
+  // documentElement beats any stylesheet rule that isn't !important.
   const effective = (theme === "light" && appearance.accent === "white")
     ? { color: "#55627a", rgb: "85,98,122" }
     : accent;
@@ -1091,6 +1091,11 @@ function completeQuest() {
 let timerSeconds = 25 * 60;
 let timerInterval = null;
 let timerRunning = false;
+let timerEndTime = null;
+
+function configuredDuration() {
+  return clamp(Number($("#timer-duration").value) || 25, 1, 180) * 60;
+}
 
 function updateTimerDisplay() {
   const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
@@ -1102,16 +1107,25 @@ function stopTimer() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   timerRunning = false;
+  timerEndTime = null;
 }
 
 function startTimer() {
   if (timerRunning) return;
 
+  // Restart-after-completion: reset to configured duration.
+  if (timerSeconds <= 0) {
+    timerSeconds = configuredDuration();
+    updateTimerDisplay();
+  }
+
   timerRunning = true;
+  timerEndTime = Date.now() + timerSeconds * 1000;
   $("#timer-status").textContent = "Focus session in progress…";
 
+  // Poll faster than 1s so the display stays fresh after a throttled tab resumes.
   timerInterval = setInterval(() => {
-    timerSeconds = Math.max(0, timerSeconds - 1);
+    timerSeconds = Math.max(0, Math.round((timerEndTime - Date.now()) / 1000));
     updateTimerDisplay();
 
     if (timerSeconds === 0) {
@@ -1126,17 +1140,22 @@ function startTimer() {
       $("#timer-status").textContent = "Session complete. Take a break if you need one.";
       toast("Focus session complete!");
     }
-  }, 1000);
+  }, 250);
 }
 
 function pauseTimer() {
+  // Recompute from wall clock so pausing after a throttled tab is accurate.
+  if (timerEndTime) {
+    timerSeconds = Math.max(0, Math.round((timerEndTime - Date.now()) / 1000));
+  }
   stopTimer();
+  updateTimerDisplay();
   $("#timer-status").textContent = "Paused. Continue when ready.";
 }
 
 function resetTimer() {
   stopTimer();
-  timerSeconds = clamp(Number($("#timer-duration").value) || 25, 1, 180) * 60;
+  timerSeconds = configuredDuration();
   updateTimerDisplay();
   $("#timer-status").textContent = "Ready when you are.";
 }
